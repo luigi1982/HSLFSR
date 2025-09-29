@@ -1,10 +1,10 @@
 import torch
-from models.epit import EPIT
+from models.f3dun import F3DUN
 
-f = EPIT(64)
+f = F3DUN(64)
 print(sum(p.numel() for p in f.parameters()))
-x = torch.randn((1, 1, 25, 32, 32))
+x = torch.randn((1, 25, 32, 32))
 y = f(x)
-
 print(y.shape)
+
 
