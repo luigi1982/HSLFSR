@@ -126,10 +126,11 @@ class AltFilter(nn.Module):
     
 
 class EPIT(nn.Module):
-    def __init__(self, channels, ang_res=5):
+    def __init__(self, channels, ang_res=5, use_as_encoder=False):
         super().__init__()
 
         self.ang_res = ang_res
+        self.use_as_encoder = use_as_encoder
 
         self.in_conv = nn.Sequential(
             nn.Conv3d(1, channels, (1, 3, 3), padding=(0, 1, 1), bias=False),
@@ -137,7 +138,7 @@ class EPIT(nn.Module):
         )
 
         self.EPI_features = nn.Sequential(
-            *[AltFilter(channels) for _ in range(10)]
+            *[AltFilter(channels) for _ in range(5)]
         )
 
         self.upsampling = nn.Sequential(
@@ -154,10 +155,12 @@ class EPIT(nn.Module):
 
         # x is shape B x C x UV x H x W
         # reshape to B x C x UV x HW for upsampling
-        x = rearrange(x, 'b c (u v) h w -> b c (u h) (v w)', u=self.ang_res, v=self.ang_res)
-        x = self.upsampling(x)
-        x = rearrange(x, 'b c (u h) (v w) -> b c (u v) h w', h=4*h, w=4*w, u=self.ang_res, v=self.ang_res)
+        x_up = rearrange(x, 'b c (u v) h w -> b c (u h) (v w)', u=self.ang_res, v=self.ang_res)
+        x_up = self.upsampling(x_up)
+        x_up = rearrange(x_up, 'b c (u h) (v w) -> b c (u v) h w', h=4*h, w=4*w, u=self.ang_res, v=self.ang_res)
 
-        return x
-
+        if self.use_as_encoder:
+            return x_up, rearrange(x, 'b c (u v) h w -> b c (h u) (w v)', u=self.ang_res, v=self.ang_res)
+        else:
+            return x_up
         

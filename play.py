@@ -1,10 +1,10 @@
 import torch
-from models.f3dun import F3DUN
+from models.SSR.mstpp import MST
 
-f = F3DUN(64)
+f = MST()
 print(sum(p.numel() for p in f.parameters()))
 x = torch.randn((1, 25, 32, 32))
-y = f(x)
-print(y.shape)
+z = f(x)
+print(z.shape)
 
 
