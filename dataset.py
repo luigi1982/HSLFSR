@@ -1,0 +1,66 @@
+import torch
+from torch.utils.data.dataset import Dataset
+import os
+import h5py
+import numpy as np
+
+class LightFieldDataset(Dataset):
+    def __init__(self, data_list, transform=None, train=True, root_dir='../transformer_for_HSLFSR/data'):
+        super().__init__()
+        self.transform = transform
+        train = 'train' if train else 'test'
+        self.data_dir = os.path.join(root_dir, train)
+        self.file_list = []
+
+        for data_name in data_list:
+            path = os.path.join(root_dir, train, data_name)
+            tmp_list = os.listdir(path)
+            for index, _ in enumerate(tmp_list):
+                tmp_list[index] = os.path.join(data_name, tmp_list[index])
+
+            self.file_list.extend(tmp_list)
+
+    def __len__(self):
+        return len(self.file_list)
+    
+    def __getitem__(self, index):
+        path = os.path.join(self.data_dir, self.file_list[index])
+
+        with h5py.File(path, 'r') as hf:
+            LF = np.array(hf.get('LF'))
+
+        LF = torch.from_numpy(LF)
+        if self.transform is not None:
+            LF = self.transform(LF)
+
+        return LF
+
+
+class LightFieldTestDataset(Dataset):
+    def __init__(self, data_list, transform=None, root_dir='../datasets'):
+        super().__init__()
+        self.transform = transform
+        self.file_list = []
+
+        for data_name in data_list:
+            path = os.path.join(root_dir, data_name, 'test_hsi')
+            tmp_list = os.listdir(path)
+            for index, _ in enumerate(tmp_list):
+                tmp_list[index] = os.path.join(root_dir, data_name, 'test_hsi', tmp_list[index])
+
+            self.file_list.extend(tmp_list)
+
+    def __len__(self):
+        return len(self.file_list)
+    
+    def __getitem__(self, index):
+
+        with h5py.File(self.file_list[index], 'r') as hf:
+            LF = np.array(hf.get('LF'))
+
+        LF = torch.from_numpy(LF).permute((2, 0, 1)).to(torch.float32)
+
+        if self.transform is not None:
+            LF = self.transform(LF)
+
+        return LF

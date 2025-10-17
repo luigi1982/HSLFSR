@@ -1,0 +1,14 @@
+.venv/
+runs/
+results/
+reports/
+models_/
+bins/
+result_vis/imgs/
+result_vis/latex/
+result_vis/plots/
+play.py
+
+*.aux
+*.log
+*.toc
