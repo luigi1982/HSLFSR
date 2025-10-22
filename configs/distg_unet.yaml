@@ -7,7 +7,7 @@
     "optim": {
       "name": "adam",
       "lr": 0.0002,
-      "weight_decay_steps": 35, 
+      "lr_decay_steps": 35, 
       "gamma": 0.5
     },
     "model": {

@@ -5,7 +5,7 @@ from typing import List, Optional
 class OptimConfig:
     name: str = 'adam'
     lr: float = 2e-4 
-    weight_decay_steps: int = 15
+    lr_decay_steps: int = 15
     gamma: float = 0.5
 
 @dataclass
@@ -16,6 +16,8 @@ class ModelConfig:
 @dataclass
 class EvaluationConfig:
     batch_size: int = 16
+    eval_step: int = 1
+    save_lf_step: int = 5
 
 @dataclass
 class TrainConfig:
