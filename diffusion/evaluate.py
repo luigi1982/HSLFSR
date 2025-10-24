@@ -15,6 +15,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from dataset import LightFieldTestDataset
 from utils.utils import *
 from utils.metrics import *
+from utils.data import load_data
 from config import TrainConfig, make_serializable
 
 from models.LFSR.distg_unet import DISTG_UNET
@@ -41,39 +42,8 @@ ENC_PATH='models_/epit/dim32-1014-1552/net_epoch_50.pth'
 print(f'Running on device: {DEVICE}')
 
 ### Get the Data
-#transformation
-
-## mean and std of dataset
-mean = (0.0403, 0.0527, 0.0594, 0.0673, 0.0781, 0.0874, 0.0926, 0.0936, 0.0957,
-        0.0957, 0.0957, 0.0961, 0.1002, 0.1054, 0.1089, 0.1089, 0.1088, 0.1069,
-        0.1054, 0.1056, 0.1097, 0.1130, 0.1148, 0.1158, 0.1180)
-std = (0.0523, 0.0696, 0.0780, 0.0878, 0.1010, 0.1117, 0.1169, 0.1175, 0.1177,
-        0.1156, 0.1132, 0.1125, 0.1165, 0.1242, 0.1319, 0.1352, 0.1343, 0.1317,
-        0.1293, 0.1279, 0.1298, 0.1315, 0.1315, 0.1316, 0.1333)
-
-## mean and std of dataset after normlaizing data with the above mean and std
-## and then clamping the values to [-1, +1]
-mean2 = (-0.1506, -0.1519, -0.1525, -0.1528, -0.1532, -0.1527, -0.1520, -0.1518,
-        -0.1520, -0.1503, -0.1483, -0.1491, -0.1503, -0.1501, -0.1490, -0.1475,
-        -0.1460, -0.1457, -0.1448, -0.1446, -0.1449, -0.1449, -0.1448, -0.1456,
-        -0.1466)
-std2 = (0.6029, 0.6081, 0.6144, 0.6195, 0.6274, 0.6305, 0.6338, 0.6341, 0.6425,
-        0.6454, 0.6520, 0.6535, 0.6525, 0.6396, 0.6233, 0.6111, 0.6134, 0.6140,
-        0.6173, 0.6241, 0.6358, 0.6480, 0.6595, 0.6665, 0.6722)
-
-transform = transforms.Compose([
-    transforms.Normalize(mean, std),
-    transforms.Lambda(lambda x: torch.clamp(x, -1, 1)),
-    transforms.Normalize(mean2, std2)
-])
-
-#Load Test Data
 data_list = ['EPFL', 'HCI_new', 'HCI_old','INRIA_Lytro', 'Stanford_Gantry']
-test_loaders = []
-for data in data_list:
-    dataset = LightFieldTestDataset([data], transform=transform)
-    test_loader = DataLoader(dataset, batch_size=1, shuffle=False)
-    test_loaders.append(test_loader)
+_, test_loaders = load_data(data_list, data_list, 1)
 
 #get models
 denoise_fn = DISTG_UNET(32, 32, 32).to(DEVICE)

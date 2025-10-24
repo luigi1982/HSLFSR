@@ -11,7 +11,7 @@ from dataset import LightFieldDataset, LightFieldTestDataset
 
 from utils.utils import *
 from utils.metrics import *
-from utils.data import load_data
+from utils.data import load_data, denormalize_hsi
 
 class Trainer():
 
@@ -21,19 +21,21 @@ class Trainer():
             epochs, device, batch_size,
             test_batch_size, 
             evaluation_step, save_lfs_step,
-            optimizer=Adam, lr=2e-4, lr_decay_steps=15, gamma=0.5
+            optimizer=Adam, lr=2e-4, lr_decay_steps=15, gamma=0.5,
+            cross_val_run=None
         ):
 
         self.model = model
+        self.model_name = model_name
         self.epochs = epochs
         self.device = device
         self.test_batch_size = test_batch_size
         self.evaluation_step = evaluation_step
         self.save_lfs_step = save_lfs_step
 
-        #load train data and oad test data
-        self.train_loader, self.test_loaders = load_data(
-            train_data_list, test_data_list, batch_size
+        #load train data and load test data
+        self.train_loader, self.test_loaders = self.load_datasets(
+            train_data_list, test_data_list, batch_size, use_train_as_test=cross_val_run is not None
         ) 
 
         #set the optimizer
@@ -48,11 +50,21 @@ class Trainer():
         name = exp_name
         now = datetime.now()
         now = now.strftime('%m%d-%H%M')
-        exp_name = name+'-'+now
-        writer = SummaryWriter(f'runs/{model_name}/training/{exp_name}')
-        metrics = ['SSIM', 'PSNR', 'SAM', 'SRE']
+        exp_name = name+'-'+now if cross_val_run is None else name
+        dir = f'runs/{model_name}/training/{exp_name}' if cross_val_run is None else f'runs/{model_name}/cross_val/{cross_val_run}/{exp_name}'
+        self.writer = SummaryWriter(dir)
+        self.metrics = ['SSIM', 'PSNR', 'SAM', 'SRE']
+        self.data_list = test_data_list
 
+        ### saving LFs and models
+        self.save_lfs_path = os.path.join(
+            'results', model_name, 'training' if cross_val_run is None else 'cross_val'
+        )
+        save_model_path = ['models_', model_name, 'training', exp_name] if cross_val_run is None else ['models_', model_name, 'cross_val', cross_val_run, exp_name]
+        self.save_model_path = os.path.join(*save_model_path)
     def training(self):
+
+        self.model.to(self.device)
 
         if 'cuda' in self.device:
             torch.cuda.set_device(self.device)
@@ -138,7 +150,6 @@ class Trainer():
                 LF_out = LF_out[:, :, 0:LF_target.size(-2), 0:LF_target.size(-1)].cpu().to(torch.float32).detach()
 
                 ### compute metrics
-
                 LF_out = LF_out.squeeze()
                 LF_target = LF_target.squeeze()
 
@@ -149,18 +160,45 @@ class Trainer():
                 #SRE
                 sre_set[j] = compute_sre(LF_out, LF_target)
 
-                ### save result every 5 epochs
+                ### save result if save_lfs True
                 if save_lfs:
-                    save_path = os.path.join('results', self.model_name, self.exp_name, f'epoch_{epoch+1}', self.data_list[i])
+                    save_path = os.path.join(self.save_lfs_path, f'epoch_{epoch+1}', self.data_list[i])
                     os.makedirs(save_path, exist_ok=True)
                     with h5py.File(save_path+f'/scene_{j+1}.h5', 'w') as hf:
-                        hf.create_dataset('SR', data=LF_out.numpy())
+                        hf.create_dataset('SR', data=denormalize_hsi(LF_out).numpy())
+
+            ssim[i] = ssim_set.mean()
+            psnr[i] = psnr_set.mean()
+            sam[i] = sam_set.mean()
+            sre[i] = sre_set.mean()
+
+        for name, metric in zip(self.metrics, [ssim, psnr, sam, sre]):
+
+            self.writer.add_scalars(
+                name, dict(zip(self.data_list, metric)), global_step=epoch+1
+            )
+
+        print(
+            f'SSIM: {ssim.mean():.3f}; PSNR: {psnr.mean():.3f}; SAM: {sam.mean():.3f}; SRE: {sre.mean():.3f}'
+        )
+
+        self.writer.add_scalars(
+            'Avg', {'SSIM': ssim.mean(), 'PSNR': psnr.mean(), 'SAM': sam.mean(), 'SRE': sre.mean()}, global_step=epoch+1
+        )
+
+        ### save the model
+        model_path = self.save_model_path
+        os.makedirs(model_path, exist_ok=True)
+        torch.save(self.model.state_dict(), model_path + f'/net_epoch_{epoch+1}.pth')
 
     def train_step(self, x):
         raise NotImplementedError 
     
     def evaluate_step(self, x):
         raise NotImplementedError 
+    
+    def load_datasets(self, train_data_list, test_data_list, batch_size, use_train_as_test=False):
+        raise NotImplementedError
 
 
 

@@ -1,6 +1,8 @@
 .venv/
 runs/
+runs_outdated/
 results/
+results_outdated/
 reports/
 models_/
 bins/

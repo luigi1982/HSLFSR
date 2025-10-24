@@ -1,4 +1,5 @@
 import torch
+from torchmetrics.image import SpectralAngleMapper as SAM
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 
@@ -7,14 +8,8 @@ def compute_sam(x, y):
     Input stacked SAIs x, y UV x H x W
     compute SAM of x, y
     '''
-    c, _, _ = x.size()
-    x = x.permute((1, 2, 0)).contiguous().view((-1, c))
-    y = y.permute((1, 2, 0)).contiguous().view((-1, c))
-    epsilon = 1e-8  # Small value to prevent division by zero
-    denominator = torch.norm(x, p=2, dim=-1) * torch.norm(y, p=2, dim=-1) + epsilon
-    sam = torch.arccos((x*y).sum(-1)/denominator).mean()
-
-    return sam
+    sam = SAM()
+    return sam(x.unsqueeze(0), y.unsqueeze(0))
 
 def compute_sre(x, y):
 

@@ -1,9 +1,9 @@
 {
   "train": {
-    "epochs": 50,
+    "epochs": 80,
     "batch_size": 64,
-    "device": "cuda:1",
-    "name": "dim32",
+    "device": "cuda:0",
+    "name": "test",
     "optim": {
       "name": "adam",
       "lr": 0.0002,

@@ -36,16 +36,17 @@ class LightFieldDataset(Dataset):
 
 
 class LightFieldTestDataset(Dataset):
-    def __init__(self, data_list, transform=None, root_dir='../datasets'):
+    def __init__(self, data_list, transform=None, root_dir='../datasets', use_train_as_test=False):
         super().__init__()
         self.transform = transform
         self.file_list = []
+        dataset = 'training_hsi' if use_train_as_test else 'test_hsi'
 
         for data_name in data_list:
-            path = os.path.join(root_dir, data_name, 'test_hsi')
+            path = os.path.join(root_dir, data_name, dataset)
             tmp_list = os.listdir(path)
             for index, _ in enumerate(tmp_list):
-                tmp_list[index] = os.path.join(root_dir, data_name, 'test_hsi', tmp_list[index])
+                tmp_list[index] = os.path.join(root_dir, data_name, dataset, tmp_list[index])
 
             self.file_list.extend(tmp_list)
 

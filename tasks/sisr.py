@@ -1,6 +1,6 @@
 from tasks import Trainer
 from utils.data import load_data
-from dataset import LightFieldDataset, LightFieldTestDataset
+from sisr.dataset import LightFieldDataset, LightFieldTestDataset
 
 import torch
 from torch.optim import Adam
@@ -37,6 +37,7 @@ class LFSRTrainer(Trainer):
 
     def train_step(self, hr):
         with torch.amp.autocast('cuda', dtype=torch.bfloat16):
+
             #sample down data
             lr = F.interpolate(hr, scale_factor=0.25, mode='bicubic')
             sr = self.model(lr)
@@ -46,13 +47,19 @@ class LFSRTrainer(Trainer):
     
     def evaluate_step(self, sub_LF_input):
         sub_LF_out = []
-        for k in range(0, sub_LF_input.size(0), self.test_batch_size):
-            tmp = sub_LF_input[k:min(k + self.test_batch_size, sub_LF_input.size(0)), :, :, :]
-            with torch.amp.autocast('cuda', dtype=torch.bfloat16):
-                with torch.no_grad():
-                    self.model.eval()
-                    torch.cuda.empty_cache()
-                    out = self.model(tmp.to(self.device))
-                    sub_LF_out.append(out)
+        for k in range(0, sub_LF_input.size(0), 1):
+            tmp = sub_LF_input[k:min(k + 1, sub_LF_input.size(0)), :, :, :]
+            tmp = tmp.view((25, 1, 32, 32))
+            outs = []
+            for l in range(0, tmp.size(0), self.test_batch_size):
+                sais = tmp[l:l+self.test_batch_size]
+                with torch.amp.autocast('cuda', dtype=torch.bfloat16):
+                    with torch.no_grad():
+                        self.model.eval()
+                        torch.cuda.empty_cache()
+                        out = self.model(sais.to(self.device))
+                        outs.append(out)
+            
+            sub_LF_out.append(torch.cat(outs, dim=0).view((1, 25, 128, 128)))
 
         return sub_LF_out

@@ -1,15 +1,21 @@
-from tasks import Trainer
-from utils.data import load_data
-from dataset import LightFieldDataset, LightFieldTestDataset
-
+import os
+import sys
 import torch
 from torch.optim import Adam
 from torch.nn import functional as F
 
-class LFSRTrainer(Trainer):
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+
+from utils.data import load_data
+from dataset import LightFieldDataset, LightFieldTestDataset
+from tasks import Trainer
+from diffusion.diffusion import GaussianDiffusion
+
+class DIFFTrainer(Trainer):
 
     def __init__(
-            self, exp_name, model_name, model, 
+            self, exp_name, model_name, 
+            denoise_fn, encoder_fn, 
             train_data_list, test_data_list,
             epochs, device, batch_size,
             test_batch_size, evaluation_step, save_lfs_step,
@@ -17,6 +23,11 @@ class LFSRTrainer(Trainer):
             optimizer=Adam, lr=2e-4, lr_decay_steps=15, gamma=0.5,
             cross_val_run=None
         ):
+
+        model = GaussianDiffusion(denoise_fn, encoder_fn)
+
+        for param in model.encoder_fn.parameters():
+            param.requires_grad = False
 
         super().__init__(
             exp_name, model_name, model, 
@@ -39,8 +50,12 @@ class LFSRTrainer(Trainer):
         with torch.amp.autocast('cuda', dtype=torch.bfloat16):
             #sample down data
             lr = F.interpolate(hr, scale_factor=0.25, mode='bicubic')
-            sr = self.model(lr)
-            loss = self.criterion(sr, hr)
+
+            #forward pass
+            pred_noise, noise = self.model(lr, hr)
+
+            #compute loss and update weights
+            loss = self.criterion(pred_noise, noise)
 
         return loss
     
@@ -52,7 +67,8 @@ class LFSRTrainer(Trainer):
                 with torch.no_grad():
                     self.model.eval()
                     torch.cuda.empty_cache()
-                    out = self.model(tmp.to(self.device))
+                    out = self.model.p_sample(tmp.to(self.device))
+                    out = out.view((out.size(0), 25, 128, 128))
                     sub_LF_out.append(out)
 
         return sub_LF_out

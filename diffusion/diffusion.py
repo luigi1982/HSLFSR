@@ -5,13 +5,13 @@ import math
 from einops import rearrange
 from tqdm import tqdm
 
-def cosine_beta_schedule(T, s=8e-3):
-    ts = torch.arange(0, T+1)
-    ft = torch.cos((ts/T + s)/(1 + s)*torch.pi/2)**2
-    alpha_bar = ft/ft[0]
+def cosine_beta_schedule(T, s=8e-3, device=None, dtype=torch.float64):
+    # keep math in float64 for stability, then cast to float32 at the end
+    ts = torch.linspace(0, T, T + 1, device=device, dtype=dtype)
+    ft = torch.cos(((ts / T + s) / (1 + s)) * torch.pi / 2) ** 2
+    alpha_bar = ft / ft[0]
     beta = 1 - (alpha_bar[1:] / alpha_bar[:-1])
-
-    return beta
+    return torch.clamp(beta.to(torch.float32), 1e-8, 0.999)
 
 class GaussianDiffusion(nn.Module):
     def __init__(self, denoise_fn, encoder_fn, timesteps=100):
@@ -27,6 +27,7 @@ class GaussianDiffusion(nn.Module):
         betas = cosine_beta_schedule(timesteps)
         alphas = 1 - betas
         alpha_bar = torch.cumprod(alphas, dim=0)
+        alpha_bar = torch.clamp(alpha_bar, 1e-12, 1.0 - 1e-12)
         #register as buffer so they are not optmized during training
         self.register_buffer("betas", betas)
         self.register_buffer("alphas", alphas)
@@ -83,24 +84,37 @@ class GaussianDiffusion(nn.Module):
 
             if noise is None:
                 b, uv, h, w = lr.shape
-                u, v = 2*[int(math.sqrt(uv))]
-                x = torch.randn((b, 1, u*scale*h, v*scale*w)).to(device)
+                u = v = int(math.sqrt(uv))
+                x = torch.randn((b, 1, u*scale*h, v*scale*w), device=device)
             else:
                 x = noise
 
-            #encode the input image
             enc_out, cond = self.encoder_fn(lr)
             img_lr_up = enc_out if use_enc_ups else F.interpolate(lr, scale_factor=scale)
+
             T = self.betas.size(0)
             n = x.size(0)
+
+            eps_safe = 1e-12  # guard against any residual zeros
+
             for t in reversed(range(T)):
-                ts = torch.tensor([t]).repeat(n).to(device)
+                ts_long = torch.full((n,), t, device=device, dtype=torch.long)
+
                 z = torch.randn_like(x) if t > 0 else 0
-                eps = self.denoise_fn(x, cond, ts.to(torch.float32))
-                x = (1/torch.sqrt(self.alphas[ts]))[:, None, None, None]*(x - ((1 - self.alphas[ts])/torch.sqrt(1 - self.alpha_bar[ts]))[:, None, None, None]*eps) + torch.sqrt(self.betas[ts])[:, None, None, None]*z
+                eps = self.denoise_fn(x, cond, ts_long)
 
-            x = x.view((-1, 1, u, 128, v, 128)).contiguous().permute((0, 1, 2, 4, 3, 5)).contiguous().view((-1, 1, u*v, 128, 128))
+                alpha_t      = torch.gather(self.alphas,     0, ts_long).view(-1,1,1,1)
+                alpha_bar_t  = torch.gather(self.alpha_bar,  0, ts_long).view(-1,1,1,1)
+                beta_t       = torch.gather(self.betas,      0, ts_long).view(-1,1,1,1)
 
+                # clamp for safety
+                alpha_t     = torch.clamp(alpha_t,     min=eps_safe)
+                one_minus_ab= torch.clamp(1.0 - alpha_bar_t, min=eps_safe)
+
+                x = (1.0/torch.sqrt(alpha_t)) * (x - ((1.0 - alpha_t)/torch.sqrt(one_minus_ab)) * eps) \
+                    + torch.sqrt(beta_t) * z
+
+            x = x.view((-1, 1, u, 128, v, 128)).contiguous().permute(0,1,2,4,3,5).contiguous().view((-1,1,u*v,128,128))
             return img_lr_up + x
 
     def img2res(self, x, img_lr_up, clip_input=True, res_rescale=2.0):

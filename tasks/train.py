@@ -28,9 +28,6 @@ GAMMA = cfg.train.optim.gamma
 
 from models import MODEL_REGISTRY
 
-#load the model
-model = MODEL_REGISTRY[MODEL]
-
 #load the trainer
 pkg = importlib.import_module(cfg.task)
 cls_name = cfg.task.upper() + 'Trainer'
@@ -40,13 +37,35 @@ trainer = getattr(pkg, cls_name)
 train_data_list = ['EPFL', 'HCI_new', 'HCI_old', 'INRIA_Lytro', 'Stanford_Gantry']
 test_data_list = ['EPFL', 'HCI_new', 'HCI_old', 'INRIA_Lytro', 'Stanford_Gantry']
 
-trainer = trainer(
-    EXP_NAME, MODEL, model, 
-    train_data_list, test_data_list,
-    EPOCHS, DEVICE, BS,
-    EVAL_BS, EVAL_STEP, SAVE_LF_STEP,
-    lr=LR, lr_decay_steps=LR_DECAY_STEP, gamma=GAMMA
-)
+
+if cfg.task == 'diff':
+
+    #load the model
+    denoise_fn = MODEL_REGISTRY['distg_unet'](32, 32, 32)
+    encoder_fn = MODEL_REGISTRY['epit'](32, use_as_encoder=True)
+
+    #instatiate the trainer class
+    trainer = trainer(
+        EXP_NAME, MODEL,
+        denoise_fn, encoder_fn, 
+        train_data_list, test_data_list,
+        EPOCHS, DEVICE, BS,
+        EVAL_BS, EVAL_STEP, SAVE_LF_STEP,
+        lr=LR, lr_decay_steps=LR_DECAY_STEP, gamma=GAMMA
+    )
+else:
+
+    #load the model
+    model = MODEL_REGISTRY[MODEL](cfg.train.model.dim)
+
+    #instatiate the trainer class
+    trainer = trainer(
+        EXP_NAME, MODEL, model, 
+        train_data_list, test_data_list,
+        EPOCHS, DEVICE, BS,
+        EVAL_BS, EVAL_STEP, SAVE_LF_STEP,
+        lr=LR, lr_decay_steps=LR_DECAY_STEP, gamma=GAMMA
+    )
 
 #start training
 trainer.training()
