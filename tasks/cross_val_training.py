@@ -49,14 +49,14 @@ for i, data_set in enumerate(data_list):
         print(f'[{i+1}/{len(data_list)}] Hold Out: {data_set}')
 
         train_data_list = [data for data in data_list if data != data_set]
-        test_data_list = [data_set]
+        test_data_list = [data_set+'-hold_out', 'EPFL', 'HCI_new', 'HCI_old', 'INRIA_Lytro', 'Stanford_Gantry']
 
         #load the datasets in data_sets as training data
         #load the data in test_set as test data
 
         exp_name = 'hold_out='+data_set
 
-        trainer = trainer(
+        trainer_instance = trainer(
                 exp_name, MODEL, model, 
                 train_data_list, test_data_list,
                 EPOCHS, DEVICE, BS,
@@ -66,6 +66,6 @@ for i, data_set in enumerate(data_list):
         )
 
         #start training
-        trainer.training()
+        trainer_instance.training()
 
     

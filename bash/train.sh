@@ -8,5 +8,5 @@ configs=("epit")
 for config in "${configs[@]}"
 do
     echo "Training: $config"
-    python train.py --config configs/$config.yaml
+    python tasks/train.py --task lfsr --config configs/$config.yaml
 done

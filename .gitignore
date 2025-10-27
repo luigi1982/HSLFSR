@@ -14,3 +14,4 @@ play.py
 *.aux
 *.log
 *.toc
+cross_val.pdf

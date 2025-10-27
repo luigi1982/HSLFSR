@@ -35,7 +35,7 @@ class Trainer():
 
         #load train data and load test data
         self.train_loader, self.test_loaders = self.load_datasets(
-            train_data_list, test_data_list, batch_size, use_train_as_test=cross_val_run is not None
+            train_data_list, test_data_list, batch_size
         ) 
 
         #set the optimizer

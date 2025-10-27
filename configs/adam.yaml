@@ -1,8 +1,8 @@
 {
   "train": {
-    "epochs": 50,
+    "epochs": 80,
     "batch_size": 32,
-    "device": "cuda:1",
+    "device": "cuda:0",
     "name": "run1",
     "optim": {
       "name": "adam",

@@ -41,9 +41,9 @@ class DIFFTrainer(Trainer):
 
         self.criterion = criterion
 
-    def load_datasets(self, train_data_list, test_data_list, batch_size, use_train_as_test=False):
+    def load_datasets(self, train_data_list, test_data_list, batch_size):
         return load_data(
-            train_data_list, test_data_list, batch_size, train_data=LightFieldTestDataset, test_data=LightFieldTestDataset, use_train_as_test=use_train_as_test
+            train_data_list, test_data_list, batch_size, train_data=LightFieldTestDataset, test_data=LightFieldTestDataset
         )
 
     def train_step(self, hr):

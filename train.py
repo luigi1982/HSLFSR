@@ -98,7 +98,7 @@ opt = torch.optim.Adam(
 )
 scheduler = torch.optim.lr_scheduler.StepLR(
     opt, 
-    step_size=cfg.train.optim.weight_decay_steps, 
+    step_size=cfg.train.optim.lr_decay_steps, 
     gamma=cfg.train.optim.gamma
 )
 

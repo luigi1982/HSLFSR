@@ -34,7 +34,7 @@ def denormalize_hsi(x_norm: torch.Tensor, m_vec: torch.Tensor = MAXS95) -> torch
     m = m_vec.to(device=x_norm.device, dtype=x_norm.dtype).view(C,1,1)
     return x_norm * m
 
-def load_data(train_list, test_list, batch_size, train_data, test_data, transform=True, use_train_as_test=False):
+def load_data(train_list, test_list, batch_size, train_data, test_data, transform=True):
 
     transform = transforms.Compose([
         transforms.Lambda(lambda x: torch.from_numpy(x).to(torch.float32)),
@@ -48,7 +48,7 @@ def load_data(train_list, test_list, batch_size, train_data, test_data, transfor
     #Load Test Data
     test_loaders = []
     for data in test_list:
-        dataset = test_data([data], transform=transform, use_train_as_test=use_train_as_test)
+        dataset = test_data([data], transform=transform)
         test_loader = DataLoader(dataset, batch_size=1, shuffle=False)
         test_loaders.append(test_loader)
 
