@@ -5,10 +5,12 @@ results/
 results_outdated/
 reports/
 models_/
+models_outdated/
 bins/
 result_vis/imgs/
 result_vis/latex/
 result_vis/plots/
+data/
 play.py
 
 *.aux

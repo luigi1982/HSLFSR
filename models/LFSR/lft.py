@@ -16,6 +16,32 @@ class SinusoidalPosEmb(nn.Module):
         chn = chn * self.a/(self.dim//2)
         emb = pos[:, None] / chn[None, :]
         return torch.cat([emb.sin(), emb.cos()], dim=-1)[None, :, :]
+    
+class SinusoidalPosEmb2d(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.dim = dim
+        self.a = math.log(1e4)
+
+    def forward(self, x):
+
+        ### input is b l c
+        ### assuming input is square -> l = h*w = h^2
+        _, l, _ = x.size()
+        h = int(math.sqrt(l))
+        pos = torch.arange(h)
+        chn = torch.arange(self.dim//2)
+        chn = chn * self.a/(self.dim//2)
+        emb = pos[:, None] / chn[None, :]
+        emb_cos = emb.cos()
+        emb_sin = emb.sin()
+
+        emb_sin = emb_sin[:, None, :] + emb_sin[None, :, :]
+        emb_cos = emb_cos[:, None, :] + emb_cos[None, :, :]
+
+        emb = torch.cat([emb_sin, emb_cos], dim=-1).view((1, -1, self.dim))
+
+        return emb
 
 class TransformerBlock(nn.Module):
     def __init__(self, dim, num_heads, pos_emb=SinusoidalPosEmb):
@@ -85,7 +111,7 @@ class SpaTrans(nn.Module):
     def __init__(self, dim, num_heads):
         super().__init__()
         self.conv = nn.Conv2d(dim, dim*2, kernel_size=3, padding=1)
-        self.trans = TransformerBlock(dim*2, num_heads*2)
+        self.trans = TransformerBlock(dim*2, num_heads*2, pos_emb=SinusoidalPosEmb2d)
         self.conv_out = nn.Conv2d(2*dim, dim, kernel_size=1)
 
         cached = self.gen_mask(32, 32, 5)

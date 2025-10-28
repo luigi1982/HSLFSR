@@ -5,7 +5,7 @@ import h5py
 import numpy as np
 
 class LightFieldDataset(Dataset):
-    def __init__(self, data_list, transform=None, train=True, root_dir='../transformer_for_HSLFSR/data'):
+    def __init__(self, data_list, transform=None, train=True, root_dir='data'):
         super().__init__()
         self.transform = transform
         train = 'train' if train else 'test'
