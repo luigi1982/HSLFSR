@@ -87,7 +87,7 @@ class WindowAttention(nn.Module):
         #compute attention scores
         attn = dots.softmax(dim=-1)
         #
-        out = einsum(attn, v, 'b h w i j, b h w i d -> b h w i d')
+        out = einsum(attn, v, 'b h w i j, b h w j d -> b h w i d')
 
         out = rearrange(out, 'b h (nw_h nw_w) (w_h w_w) d -> b (nw_h w_h) (nw_w w_w) (h d)',
                 nw_h=nw_h, w_h=self.window_size, w_w=self.window_size
