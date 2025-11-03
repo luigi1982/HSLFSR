@@ -62,7 +62,7 @@ class SISRTrainer(Trainer):
                     with torch.no_grad():
                         self.model.eval()
                         torch.cuda.empty_cache()
-                        out = self.model(sais.to(self.device), wl)
+                        out = self.model(sais.to(self.device)) #self.model(sais.to(self.device), wl)
                         outs.append(out)
             
             sub_LF_out.append(torch.cat(outs, dim=0).view((1, 25, 128, 128)))

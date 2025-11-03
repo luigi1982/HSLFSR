@@ -116,7 +116,7 @@ class AngTrans(nn.Module):
         )
 
         attn = F.softmax(self.scale * einsum(q, k, 'b h l1 d, b h l2 d -> b h l1 l2'), dim=-1)
-        buffer = einsum(attn, v, 'b h l1 l2, b h l1 d -> b h l1 d')
+        buffer = einsum(attn, v, 'b h l1 l2, b h l2 d -> b h l1 d')
 
         buffer = rearrange(buffer, 'b h l d -> b l (h d)')
         buffer = self.w_out(buffer)

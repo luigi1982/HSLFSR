@@ -10,14 +10,14 @@ from get_results import parse_avgs
 from generate_vis import gen_table
 from gen_latex import minipage2x2, wrap_in_latex, latex_figure
 
-def get_stats():
+def get_stats(models):
     dir = 'runs'
     dic = {}
-    for model in os.listdir(dir):
+    for model in models:
         dic[model] = {}
         path = os.path.join(dir, model, 'training')
         for exp in os.listdir(path):
-            if not 'no-normalization' in exp:
+            if 'real_data' in exp:
                 try: 
                     dfs = parse_avgs(os.path.join(path, exp))
                     if len(dfs) >= 4:
@@ -110,13 +110,12 @@ def create_model_page(model, model_dict):
     
     return latex, exp_max
 
-def create_model_pages(dic):
+def create_model_pages(dic, models):
 
     latex = '\\section{Intra Model Comparison}'
     max_models = {}
 
-    dir = 'runs'
-    for model in os.listdir(dir):
+    for model in models:
         if model != 'distg_unet':
             latex_model, max_model = create_model_page(model, dic[model])
             max_models[model] = max_model
@@ -164,8 +163,9 @@ def create_comparison(max_models):
     return latex
 
 def create_doc():
-    dic = dict([(k, v) for k, v in get_stats().items() if k != 'distg_unet'])
-    intra, models = create_model_pages(dic)
+    models = ['distg', 'epit', 'adam']
+    dic = dict([(k, v) for k, v in get_stats(models).items() if k != 'distg_unet'])
+    intra, models = create_model_pages(dic, models)
     inter = create_comparison(models)
     latex = wrap_in_latex(
         '\\title{Intra and Inter Model Comparison} \n \\maketitle \\tableofcontents \n' + intra + inter

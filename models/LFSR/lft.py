@@ -12,10 +12,10 @@ class SinusoidalPosEmb(nn.Module):
 
     def forward(self, x):
         device = x.device
-        pos = torch.arange(x.size(1), device=device)
-        chn = torch.arange(self.dim//2, device=device)
+        pos = torch.arange(x.size(1), device=device).float() 
+        chn = torch.arange(self.dim//2, device=device).float() 
         chn = chn * self.a/(self.dim//2)
-        emb = pos[:, None] / chn[None, :]
+        emb = pos[:, None] / torch.exp(chn)[None, :]
         return torch.cat([emb.sin(), emb.cos()], dim=-1)[None, :, :]
     
 class SinusoidalPosEmb2d(nn.Module):
@@ -31,10 +31,10 @@ class SinusoidalPosEmb2d(nn.Module):
         _, l, _ = x.size()
         device = x.device
         h = int(math.sqrt(l))
-        pos = torch.arange(h, device=device)
-        chn = torch.arange(self.dim//2, device=device)
+        pos = torch.arange(h, device=device).float() 
+        chn = torch.arange(self.dim//2, device=device).float() 
         chn = chn * self.a/(self.dim//2)
-        emb = pos[:, None] / chn[None, :]
+        emb = pos[:, None] / torch.exp(chn)[None, :]
         emb_cos = emb.cos()
         emb_sin = emb.sin()
 
@@ -203,23 +203,23 @@ class LFT(nn.Module):
 
     def forward(self, x, scale=4):
         #input B x UV x H x W
+        
+        #initial
+        buffer = x.unsqueeze(1)
+        buffer = self.conv_init0(buffer)
+        buffer = buffer + self.conv_init(buffer)
+
+        #body
+        buffer = rearrange(buffer, 'b c n h w -> b (h w) n c')
+        buffer = buffer + self.body(buffer)
+
+        buffer = rearrange(buffer, 'b (h w) (u v) c -> b c (u h) (v w)', h=32, v=5)
+
+        #upscale
+        buffer = self.upsampling(buffer)
+        buffer = rearrange(buffer, ' b c (u h) (v w) -> (b c) (u v) h w', h=scale*32, v=5)
 
         #bc interpolate lr
         bc = F.interpolate(x, scale_factor=scale, mode='bicubic')
-        
-        #initial
-        x = x.unsqueeze(1)
-        buffer = self.conv_init0(x)
-        x = x + self.conv_init(buffer)
 
-        #body
-        x = rearrange(x, 'b c n h w -> b (h w) n c')
-        x = x + self.body(x)
-
-        x = rearrange(x, 'b (h w) (u v) c -> b c (u h) (v w)', h=32, v=5)
-
-        #upscale
-        x = self.upsampling(x)
-        x = rearrange(x, ' b c (u h) (v w) -> (b c) (u v) h w', h=scale*32, v=5)
-
-        return x + bc
+        return buffer + bc

@@ -63,7 +63,7 @@ class LightFieldTestDataset(Dataset):
     def __getitem__(self, index):
 
         with h5py.File(self.file_list[index], 'r') as hf:
-            LF = np.array(hf.get('LF'))
+            LF = np.array(hf.get('HR'))
 
         #LF = torch.from_numpy(LF).permute((2, 0, 1)).to(torch.float32)
 

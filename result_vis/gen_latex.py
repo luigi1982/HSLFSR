@@ -78,7 +78,7 @@ def gen_description(dict, num_parameters):
     The model has an overall number of ${num_parameters}$ of learnable parameters.
     The model was trained for ${dict['epochs']}$ epochs with a batch size of ${dict['batch_size']}$.
     The {dict['optim']['name']} optimizer was used with an initial learning rate of ${dict['optim']['lr']}$.
-    The learning rate is decreased every ${dict['optim']['weight_decay_steps']}$ epochs by a factor of ${dict['optim']['gamma']}$.'''
+    The learning rate is decreased every ${dict['optim']['lr_decay_steps']}$ epochs by a factor of ${dict['optim']['gamma']}$.'''
     return latex
 
 #print(latex_figure('PSNR', 'psnr.png'))

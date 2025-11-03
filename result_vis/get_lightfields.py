@@ -10,7 +10,7 @@ def get_lfsr_paths(model, exp_name):
 
     scene_paths = []
 
-    path=os.path.join('results', model, exp_name)
+    path=os.path.join('results', model, 'training', exp_name)
     epochs=os.listdir(path)
     nums=[]
     for epoch in epochs:
@@ -32,7 +32,8 @@ def get_lfsr_paths(model, exp_name):
 def get_lfhr_paths():
     scene_paths = []
     path='../datasets'
-    for test in os.listdir(path):
+    for test in ['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors']: #for test in os.listdir(path):
+        print(test)
         test = os.path.join(path, test, 'test_hsi')
         scene=os.listdir(test)[0]
         scene=os.path.join(test, scene)
@@ -44,6 +45,7 @@ def load_lfs(paths, key):
     lfs = []
     for path in paths:
         with h5py.File(path, 'r') as hf:
+            print(hf.keys())
             LF = np.array(hf.get(key))
         lfs.append(LF)
 
@@ -54,18 +56,18 @@ def plot_central_view(model, exp_name, srs, hrs):
     _, axs = plt.subplots(len(srs), 3, figsize=(6, 10), constrained_layout=True)
     for i, (sr, hr) in enumerate(zip(srs, hrs)):
         sr_cv = sr[12]
-        hr_cv = np.transpose(hr, (2, 0, 1))[12]
+        hr_cv = hr[12]
 
         #apply first normalization and clamping to HR image
         #revert second normalization on SR image
 
-        mean1 = 0.0961
+        '''mean1 = 0.0961
         std1 = 0.1125
         mean2 = -0.1483
         std2 = 0.6535
 
         hr_cv = (hr_cv - mean1) / std1
-        sr_cv = std2*sr_cv + mean2
+        sr_cv = std2*sr_cv + mean2'''
 
         '''_, axs1 = plt.subplots(1, 2)
         hr_u8 = (255*(hr_cv + 1)/2).astype(np.uint8)
@@ -78,8 +80,6 @@ def plot_central_view(model, exp_name, srs, hrs):
 
         plt.show()
         plt.savefig(f'bins_{i}.png')'''
-
-        print('Min - Max', sr_cv.min(), sr_cv.max())
 
         bc = torch.from_numpy(hr_cv).unsqueeze(0).unsqueeze(0)
         bc = F.interpolate(bc, scale_factor=0.25, mode='bicubic')
@@ -105,10 +105,13 @@ def plot_central_view(model, exp_name, srs, hrs):
 def create_qual_plot(model, exp_name):
         
     p2=get_lfsr_paths(model, exp_name)
+    sigma = [4, 2, 0, 3, 1, 5]
+    pr = [p2[i] for i in sigma]
+    p2 = pr
     lfs_sr=load_lfs(p2, 'SR')
     p1=get_lfhr_paths()
-    p1 = p1 if len(lfs_sr) == 6 else p1[1:]
-    lfs_hr=load_lfs(p1, 'LF')
+    print(p1, p2)
+    lfs_hr=load_lfs(p1, 'HR')
     path = plot_central_view(model, exp_name, lfs_sr, lfs_hr)
 
     return path

@@ -60,7 +60,10 @@ def create_metric_pages(exp_name, dfs, fraunhofer_available=True):
     if fraunhofer_available:
         labels=['EPFL', 'HCI new', 'HCI old', 'INRIA Lytro', 'Stanford Gantry', 'Fraunhofer']
     else:
-        labels=['EPFL', 'HCI new', 'HCI old', 'INRIA Lytro', 'Stanford Gantry']
+        #labels=['EPFL', 'HCI new', 'HCI old', 'INRIA Lytro', 'Stanford Gantry']
+        labels = ['Lab day', 'Lab night', 'Indoors day', 'Indoors night', 'Showroom', 'Outdoors']
+
+    print(labels)
 
     latex = '\\section{Quantitative Results} \n'
 
@@ -141,12 +144,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=str, default='epit')
     parser.add_argument("--exp", type=str, default='normalization-0924-1031')
-    parser.add_argument("--fh", type=bool, default=True)
+    parser.add_argument("--fh", type=bool, default=False)
     args = parser.parse_args()
 
     model=args.model
     exp_name=args.exp
     root=f'runs/{model}/training/{exp_name}'
     dfs = parse_all(root)
+    print(dfs.keys())
     create_documentation(model, exp_name, dfs, fraunhofer_available=args.fh)
 

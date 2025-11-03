@@ -1,6 +1,6 @@
 {
   "train": {
-    "epochs": 50,
+    "epochs": 80,
     "batch_size": 128,
     "device": "cuda:2",
     "name": "real_data-run1",
