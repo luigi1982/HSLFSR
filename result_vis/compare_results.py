@@ -29,6 +29,23 @@ def get_stats():
 
 
 def plot_dfs(model, metric, dfs, labels, title, y_label, x_label='epochs'):
+
+    '''
+
+    creates a plot visualizing the development of the specified metric over the course of training,
+    for multiple experiments
+
+    Input:
+        model - name of the model
+        metric - the evaluation metric (i.e. PSNR, SSIM, SAM, SRE)
+        dfs - dataframes containing Tensorboard statistics for the metric for each of the experimemnts
+        labels - names of the individual experiments
+        title - title for the plot (most often chosen to be the metric)
+        y_label - description for the vertical axes (also most often chosen to be the metric)
+    Returns:
+        file - returns the location were the figure is saved on the harddrive
+    '''
+
     for df, label in zip(dfs, labels):
         x = df['step'].values
         y = df['value'].values

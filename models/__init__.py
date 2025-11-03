@@ -1,5 +1,6 @@
 ### LFSR models
 from .LFSR.epit import EPIT
+from .LFSR.lft import LFT
 from .LFSR.distg import DISTG
 from .LFSR.adam import NET
 from .LFSR.distg_unet import DISTG_UNET
@@ -18,6 +19,7 @@ from .SISR.swinir import SwinIR
 
 MODEL_REGISTRY = {
     "epit": EPIT,
+    "lft": LFT,
     "distg": DISTG,
     "distg_unet": DISTG_UNET,
     "adam": NET,

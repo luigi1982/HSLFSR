@@ -11,13 +11,14 @@ from config import TrainConfig, make_serializable
 
 parser = ArgumentParser(description="Training script with config files")
 parser.add_argument("--task", default='lfsr')
+parser.add_argument("--device", default='cuda:0')
 parser.add_argument("--config", action=ActionConfigFile)
 parser.add_class_arguments(TrainConfig, nested_key="train")
 cfg = parser.parse_args()
 
 EPOCHS=cfg.train.epochs
 BS=cfg.train.batch_size
-DEVICE=cfg.train.device
+DEVICE=cfg.device
 MODEL=cfg.train.model.model
 EXP_NAME = cfg.train.name
 EVAL_BS=cfg.train.evaluation.batch_size
@@ -28,9 +29,6 @@ LR_DECAY_STEP = cfg.train.optim.lr_decay_steps
 GAMMA = cfg.train.optim.gamma
 
 from models import MODEL_REGISTRY
-
-#load the model
-model = MODEL_REGISTRY[MODEL](cfg.train.model.dim)
 
 #load the trainer
 pkg = importlib.import_module(cfg.task)
@@ -43,8 +41,9 @@ data_list = ['EPFL', 'HCI_new', 'HCI_old', 'INRIA_Lytro', 'Stanford_Gantry']
 #get the date
 now = datetime.now()
 now = now.strftime('%m%d-%H%M')
+now = '1028-1656'
 
-for i, data_set in enumerate(data_list):
+for i, data_set in enumerate(data_list[1:2]):
 
         print(f'[{i+1}/{len(data_list)}] Hold Out: {data_set}')
 
@@ -55,6 +54,9 @@ for i, data_set in enumerate(data_list):
         #load the data in test_set as test data
 
         exp_name = 'hold_out='+data_set
+
+        #initialize the model again for every hold out set
+        model = MODEL_REGISTRY[MODEL](cfg.train.model.dim)
 
         trainer_instance = trainer(
                 exp_name, MODEL, model, 

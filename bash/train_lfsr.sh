@@ -3,7 +3,7 @@ set -e
 
 source .venv/bin/activate
 
-configs=("epit")
+configs=("lft" "f3dun" "ssaformer" "mst")
 
 for config in "${configs[@]}"
 do

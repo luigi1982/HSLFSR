@@ -11,8 +11,9 @@ class SinusoidalPosEmb(nn.Module):
         self.a = math.log(1e4)
 
     def forward(self, x):
-        pos = torch.arange(x.size(1))
-        chn = torch.arange(self.dim//2)
+        device = x.device
+        pos = torch.arange(x.size(1), device=device)
+        chn = torch.arange(self.dim//2, device=device)
         chn = chn * self.a/(self.dim//2)
         emb = pos[:, None] / chn[None, :]
         return torch.cat([emb.sin(), emb.cos()], dim=-1)[None, :, :]
@@ -28,9 +29,10 @@ class SinusoidalPosEmb2d(nn.Module):
         ### input is b l c
         ### assuming input is square -> l = h*w = h^2
         _, l, _ = x.size()
+        device = x.device
         h = int(math.sqrt(l))
-        pos = torch.arange(h)
-        chn = torch.arange(self.dim//2)
+        pos = torch.arange(h, device=device)
+        chn = torch.arange(self.dim//2, device=device)
         chn = chn * self.a/(self.dim//2)
         emb = pos[:, None] / chn[None, :]
         emb_cos = emb.cos()
@@ -77,13 +79,13 @@ class MHSA(nn.Module):
             lambda x: rearrange(x, 'b l (h d) -> b h l d', h=self.num_heads),
             [q, k, v]
         )
-        A = einsum(q, k, 'b h l1 c, b h l2 c -> b h l1 l2')
-        A = F.softmax(A/math.sqrt(self.dim/self.num_heads), dim=1)
 
-        if mask is not None:
-            A = A + mask
-
-        out = einsum(A, v, 'b h l1 l2, b h l1 c -> b h l1 c')
+        out = F.scaled_dot_product_attention(
+            q, k, v,
+            attn_mask=mask,     # shape broadcastable to [B, H, Lq, Lk]
+            dropout_p=0.0,           # or self.attn_dropout during training
+            is_causal=False          # set True for decoder-only causal attention
+        )
         out = rearrange(out, 'b h l d -> b l (h d)')
         out = self.out(out)
 
@@ -168,9 +170,9 @@ class AltFilter(nn.Module):
         return x
     
 
-class Net(nn.Module):
+class LFT(nn.Module):
 
-    def __init__(self, num_layers=4, dim=64, num_heads=8, scale=4):
+    def __init__(self, num_layers=4, dim=32, num_heads=4, scale=4):
         super().__init__()
 
         #initial conv

@@ -3,7 +3,7 @@
     "epochs": 10,
     "batch_size": 64,
     "device": "cuda:2",
-    "name": "run1",
+    "name": "real_data-run1",
     "optim": {
       "name": "adam",
       "lr": 0.0002,

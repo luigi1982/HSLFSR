@@ -1,9 +1,9 @@
 {
   "train": {
     "epochs": 80,
-    "batch_size": 64,
-    "device": "cuda:0",
-    "name": "test",
+    "batch_size": 32,
+    "device": "cuda:1",
+    "name": "real_data-run1",
     "optim": {
       "name": "adam",
       "lr": 0.0002,
@@ -12,7 +12,7 @@
     },
     "model": {
       "model": "epit",
-      "dim": 32
+      "dim": 64
     }
   }
 }

@@ -3,9 +3,10 @@ from matplotlib import pyplot as plt
 import torch
 
 from data import load_data
+from dataset import LightFieldDataset, LightFieldTestDataset
 
-train_data_list = ['EPFL', 'HCI_new', 'HCI_old', 'INRIA_Lytro', 'Stanford_Gantry']
-train_loader, _ = load_data(train_data_list, train_data_list, 16, transform=False)
+train_data_list = ['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors']
+train_loader, _ = load_data(train_data_list, train_data_list, 16, train_data=LightFieldDataset, test_data=LightFieldTestDataset, transform=False)
 
 max_list = []
 
@@ -24,9 +25,9 @@ for i, row in enumerate(x):
     print(f"Row {i}:")
     print("  Lowest 10:", lowest_10)
     print("  Highest 10:", highest_10)
-    print("  95th percentile:", sorted_row[int(0.95*8999)])
-    print("  50th percentile:", sorted_row[int(0.50*8999)])
-    print("  5th percentile:", sorted_row[int(0.05*8999)])
+    print("  95th percentile:", sorted_row[int(0.95*10025)])
+    print("  50th percentile:", sorted_row[int(0.50*10025)])
+    print("  5th percentile:", sorted_row[int(0.05*10025)])
     print()
 
     maxs.append(sorted_row[-1].item())

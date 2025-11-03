@@ -8,5 +8,5 @@ configs=("drcan" "swinir" "hat")
 for config in "${configs[@]}"
 do
     echo "Training: $config"
-    python sisr/train.py --config configs/$config.yaml
+    python tasks/train.py --task sisr --config configs/$config.yaml
 done

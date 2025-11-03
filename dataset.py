@@ -58,12 +58,18 @@ class LightFieldTestDataset(Dataset):
     def __getitem__(self, index):
 
         with h5py.File(self.file_list[index], 'r') as hf:
-            LF = np.array(hf.get('LF'))
+            LF = np.array(hf.get('HR'))
 
-        LF = np.transpose(LF, (2, 0, 1))
+        #LF = np.transpose(LF, (2, 0, 1)) for synthetic datasets
 
         if self.transform is not None:
             LF = self.transform(LF)
             LF = LF.to(torch.float32)
+
+        ### make sure that test-data s divisable into patches of size 32x32
+        _, h, w = LF.size()
+        h -= h%32
+        w -= w%32
+        LF = LF[:, :h, :w]
 
         return LF

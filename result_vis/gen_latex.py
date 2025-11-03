@@ -3,6 +3,9 @@ def latex_table(rows_desc, rows, cols):
     latex = '\\begin{tabular}' + '{c' + len(cols)*'|c' + '} \n '
     
     for col in cols:
+        if '_' in col:
+            col = col.replace('_', r'\_')
+
         latex += ' & ' + col
     
     latex += ' \\\\ \n \\hline \n'

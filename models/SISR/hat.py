@@ -175,12 +175,20 @@ class OCA(nn.Module):
             [q, k, v]
         )
 
-        #compute attention score
+        '''#compute attention score
         attn = (einsum(q, k, 'b h l1 c, b h l2 c -> b h l1 l2') / self.scale).softmax(dim=-1)
         #add the positional embedding
         attn = attn + self.pos_embedding
         #compute out
-        out = einsum(attn, v, 'b h l1 l2, b h l2 c -> b h l1 c')
+        out = einsum(attn, v, 'b h l1 l2, b h l2 c -> b h l1 c')'''
+
+        out = F.scaled_dot_product_attention(
+            q, k, v,
+            attn_mask=None,     # shape broadcastable to [B, H, Lq, Lk]
+            dropout_p=0.0,           # or self.attn_dropout during training
+            is_causal=False          # set True for decoder-only causal attention
+        )
+
         #reshape
         out = rearrange(out, '(b l1 l2) h (p1 p2) c -> b (l1 p1) (l2 p2) (h c)', l1=hl, l2=wl, p1=self.window_size)
 

@@ -23,8 +23,9 @@ def get_lfsr_paths(model, exp_name):
     path=os.path.join(path, 'epoch_'+str(epoch))
     
     for test in os.listdir(path):
-        scene = os.path.join(path, test, 'scene_1.h5')
-        scene_paths.append(scene)
+        if not 'hold_out' in test:
+            scene = os.path.join(path, test, 'scene_1.h5')
+            scene_paths.append(scene)
 
     return scene_paths
 
@@ -49,7 +50,7 @@ def load_lfs(paths, key):
     return lfs
 
 def plot_central_view(model, exp_name, srs, hrs):
-        
+
     _, axs = plt.subplots(len(srs), 3, figsize=(6, 10), constrained_layout=True)
     for i, (sr, hr) in enumerate(zip(srs, hrs)):
         sr_cv = sr[12]
@@ -66,7 +67,7 @@ def plot_central_view(model, exp_name, srs, hrs):
         hr_cv = (hr_cv - mean1) / std1
         sr_cv = std2*sr_cv + mean2
 
-        _, axs1 = plt.subplots(1, 2)
+        '''_, axs1 = plt.subplots(1, 2)
         hr_u8 = (255*(hr_cv + 1)/2).astype(np.uint8)
         sr_u8 = (255*(sr_cv + 1)/2).astype(np.uint8)
         x = np.arange(256)
@@ -76,7 +77,7 @@ def plot_central_view(model, exp_name, srs, hrs):
         axs1[1].bar(x, hist_sr)
 
         plt.show()
-        plt.savefig(f'bins_{i}.png')
+        plt.savefig(f'bins_{i}.png')'''
 
         print('Min - Max', sr_cv.min(), sr_cv.max())
 

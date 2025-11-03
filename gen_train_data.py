@@ -19,7 +19,7 @@ def main(args):
     
     data_dir = args.src_data_path
     data_for = args.data_for
-    datasets = ['Fraunhofer']
+    datasets = ['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors']
 
     patch_size_LR = 32
     patch_size_HR = 4 * patch_size_LR
@@ -40,12 +40,9 @@ def main(args):
             #load the lf
             file_path = os.path.join(path, file)
             with h5py.File(file_path, 'r') as hf:
-                lf = np.array(hf['SR'])
+                lf = np.array(hf['HR'])
 
             #extract pathches from lightfield
-
-            lf = lf.reshape((6, 11, 410, 410))[:5][:, 1::2]
-            lf =lf.reshape((25, 410, 410))
 
             n, h, w = lf.shape
             h -= (h - patch_size_HR)%stride
@@ -53,8 +50,6 @@ def main(args):
 
             n = (h - patch_size_HR)//stride
             m = (w - patch_size_HR)//stride
-
-            print(n, m)
 
             for i in range(n+1):
                 for j in range(m+1):

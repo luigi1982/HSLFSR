@@ -30,6 +30,7 @@ def compute_psnr_ssim(x, target):
     c, _, _ = x.size()
     ssim_v = torch.zeros(c)
     psnr_v = torch.zeros(c)
+
     for i in range(c):
         ssim_v[i] = ssim(x[i].numpy(), target[i].numpy(), data_range=1)
         psnr_v[i] = psnr(x[i].numpy(), target[i].numpy(), data_range=1)

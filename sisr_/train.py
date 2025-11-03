@@ -104,7 +104,7 @@ opt = torch.optim.Adam(
 )
 scheduler = torch.optim.lr_scheduler.StepLR(
     opt, 
-    step_size=cfg.train.optim.weight_decay_steps, 
+    step_size=cfg.train.optim.lr_decay_steps, 
     gamma=cfg.train.optim.gamma
 )
 
@@ -143,7 +143,10 @@ for epoch in range(EPOCHS):
     running_loss = 0.0
     for i, hr in tqdm(enumerate(train_loader), total=len(train_loader)):
 
-        hr = hr.to(DEVICE)
+        if isinstance(hr, list):
+            hr[0] = hr[0].to(DEVICE)
+        else:
+            hr = hr.to(DEVICE)
 
         #pass through model
         with torch.amp.autocast('cuda', dtype=torch.bfloat16):

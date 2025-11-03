@@ -1,12 +1,17 @@
-from tasks import Trainer
-from utils.data import load_data
-from sisr.dataset import LightFieldDataset, LightFieldTestDataset
-
 import torch
 from torch.optim import Adam
 from torch.nn import functional as F
 
-class LFSRTrainer(Trainer):
+import os
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+
+from tasks import Trainer
+from utils.data import load_data
+from sisr_.dataset import LightFieldDataset, LightFieldTestDataset
+
+class SISRTrainer(Trainer):
 
     def __init__(
             self, exp_name, model_name, model, 
@@ -32,7 +37,7 @@ class LFSRTrainer(Trainer):
 
     def load_datasets(self, train_data_list, test_data_list, batch_size):
         return load_data(
-            train_data_list, test_data_list, batch_size, train_data=LightFieldTestDataset, test_data=LightFieldTestDataset
+            train_data_list, test_data_list, batch_size, train_data=LightFieldDataset, test_data=LightFieldTestDataset, transform=False
         )
 
     def train_step(self, hr):
@@ -51,13 +56,13 @@ class LFSRTrainer(Trainer):
             tmp = sub_LF_input[k:min(k + 1, sub_LF_input.size(0)), :, :, :]
             tmp = tmp.view((25, 1, 32, 32))
             outs = []
-            for l in range(0, tmp.size(0), self.test_batch_size):
-                sais = tmp[l:l+self.test_batch_size]
+            for wl in range(0, tmp.size(0), self.test_batch_size):
+                sais = tmp[wl:wl+self.test_batch_size]
                 with torch.amp.autocast('cuda', dtype=torch.bfloat16):
                     with torch.no_grad():
                         self.model.eval()
                         torch.cuda.empty_cache()
-                        out = self.model(sais.to(self.device))
+                        out = self.model(sais.to(self.device), wl)
                         outs.append(out)
             
             sub_LF_out.append(torch.cat(outs, dim=0).view((1, 25, 128, 128)))

@@ -58,7 +58,7 @@ class Trainer():
 
         ### saving LFs and models
         self.save_lfs_path = os.path.join(
-            'results', model_name, 'training' if cross_val_run is None else 'cross_val'
+            'results', model_name, 'training' if cross_val_run is None else 'cross_val', exp_name
         )
         save_model_path = ['models_', model_name, 'training', exp_name] if cross_val_run is None else ['models_', model_name, 'cross_val', cross_val_run, exp_name]
         self.save_model_path = os.path.join(*save_model_path)

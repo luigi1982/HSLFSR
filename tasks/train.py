@@ -34,8 +34,8 @@ cls_name = cfg.task.upper() + 'Trainer'
 trainer = getattr(pkg, cls_name)
 
 #load the train and test data
-train_data_list = ['EPFL', 'HCI_new', 'HCI_old', 'INRIA_Lytro', 'Stanford_Gantry']
-test_data_list = ['EPFL', 'HCI_new', 'HCI_old', 'INRIA_Lytro', 'Stanford_Gantry']
+train_data_list = ['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors']
+test_data_list = ['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors']
 
 
 if cfg.task == 'diff':
@@ -53,6 +53,7 @@ if cfg.task == 'diff':
         EVAL_BS, EVAL_STEP, SAVE_LF_STEP,
         lr=LR, lr_decay_steps=LR_DECAY_STEP, gamma=GAMMA
     )
+    
 else:
 
     #load the model
