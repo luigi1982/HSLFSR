@@ -163,7 +163,7 @@ def create_comparison(max_models):
     return latex
 
 def create_doc():
-    models = ['distg', 'epit', 'adam']
+    models = ['distg', 'epit', 'adam', 'swinir', 'drcan']
     dic = dict([(k, v) for k, v in get_stats(models).items() if k != 'distg_unet'])
     intra, models = create_model_pages(dic, models)
     inter = create_comparison(models)

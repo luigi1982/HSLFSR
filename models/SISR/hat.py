@@ -10,7 +10,7 @@ from models.utils.swin import WindowAttention
 from models.SISR.drcan import ChannelAttention
 
 class HAT(nn.Module):
-    def __init__(self, in_channels=1, channels=180, num_groups=6, num_blocks=6, scale=4):
+    def __init__(self, channels=180, in_channels=1, num_groups=6, num_blocks=6, scale=4):
         super().__init__()
         
         #initial convolution

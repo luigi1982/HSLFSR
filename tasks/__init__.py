@@ -22,11 +22,13 @@ class Trainer():
             test_batch_size, 
             evaluation_step, save_lfs_step,
             optimizer=Adam, lr=2e-4, lr_decay_steps=15, gamma=0.5,
-            cross_val_run=None
+            cross_val_run=None,
+            start_epoch=0
         ):
 
         self.model = model
         self.model_name = model_name
+        self.start_epoch=start_epoch
         self.epochs = epochs
         self.device = device
         self.test_batch_size = test_batch_size
@@ -47,10 +49,12 @@ class Trainer():
         )
 
         ### Set up Tensorboard
-        name = exp_name
-        now = datetime.now()
-        now = now.strftime('%m%d-%H%M')
-        exp_name = name+'-'+now if cross_val_run is None else name
+        if start_epoch == 0:
+            name = exp_name
+            now = datetime.now()
+            now = now.strftime('%m%d-%H%M')
+            exp_name = name+'-'+now if cross_val_run is None else name
+            
         dir = f'runs/{model_name}/training/{exp_name}' if cross_val_run is None else f'runs/{model_name}/cross_val/{cross_val_run}/{exp_name}'
         self.writer = SummaryWriter(dir)
         self.metrics = ['SSIM', 'PSNR', 'SAM', 'SRE']
@@ -73,7 +77,7 @@ class Trainer():
             torch.backends.cuda.matmul.allow_tf32 = True
             torch.backends.cudnn.allow_tf32 = True
 
-        for epoch in range(self.epochs):
+        for epoch in range(self.start_epoch, self.epochs):
 
             running_loss = 0.0
 

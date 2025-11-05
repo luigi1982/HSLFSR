@@ -1,3 +1,5 @@
+import torch
+
 import importlib
 import os
 import sys
@@ -11,6 +13,7 @@ from config import TrainConfig, make_serializable
 parser = ArgumentParser(description="Training script with config files")
 parser.add_argument("--task", default='lfsr')
 parser.add_argument("--config", action=ActionConfigFile)
+parser.add_argument("--from_checkpoint", default=False)
 parser.add_class_arguments(TrainConfig, nested_key="train")
 cfg = parser.parse_args()
 
@@ -59,13 +62,23 @@ else:
     #load the model
     model = MODEL_REGISTRY[MODEL](cfg.train.model.dim)
 
+    #if continue tranining from a checkpoint
+    if cfg.from_checkpoint:
+        epoch = max([int(net.split('_')[-1].split('.')[0]) for net in os.listdir(f'models_/{MODEL}/training/{cfg.from_checkpoint}')])
+        checkpoint = f'models_/{MODEL}/training/{cfg.from_checkpoint}/net_epoch_{epoch}.pth'
+        model.load_state_dict(torch.load(checkpoint, weights_only=True))
+        EXP_NAME = cfg.from_checkpoint
+    else:
+        epoch=0 
+
     #instatiate the trainer class
     trainer = trainer(
         EXP_NAME, MODEL, model, 
         train_data_list, test_data_list,
         EPOCHS, DEVICE, BS,
         EVAL_BS, EVAL_STEP, SAVE_LF_STEP,
-        lr=LR, lr_decay_steps=LR_DECAY_STEP, gamma=GAMMA
+        lr=LR, lr_decay_steps=LR_DECAY_STEP, gamma=GAMMA,
+        start_epoch=epoch
     )
 
 #start training

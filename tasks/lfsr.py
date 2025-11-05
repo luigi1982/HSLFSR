@@ -15,7 +15,8 @@ class LFSRTrainer(Trainer):
             test_batch_size, evaluation_step, save_lfs_step,
             criterion=torch.nn.L1Loss(),
             optimizer=Adam, lr=2e-4, lr_decay_steps=15, gamma=0.5,
-            cross_val_run=None
+            cross_val_run=None,
+            start_epoch=0
         ):
 
         super().__init__(
@@ -25,7 +26,8 @@ class LFSRTrainer(Trainer):
             test_batch_size, 
             evaluation_step, save_lfs_step,
             optimizer=optimizer, lr=lr, lr_decay_steps=lr_decay_steps, gamma=gamma,
-            cross_val_run=cross_val_run
+            cross_val_run=cross_val_run,
+            start_epoch=start_epoch
         )
 
         self.criterion = criterion

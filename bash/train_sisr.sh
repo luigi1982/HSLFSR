@@ -3,7 +3,7 @@ set -e
 
 source .venv/bin/activate
 
-configs=("drcan" "swinir" "hat")
+configs=("hat")
 
 for config in "${configs[@]}"
 do
