@@ -17,13 +17,12 @@ def get_stats(models):
         dic[model] = {}
         path = os.path.join(dir, model, 'training')
         for exp in os.listdir(path):
-            if 'real_data' in exp:
-                try: 
-                    dfs = parse_avgs(os.path.join(path, exp))
-                    if len(dfs) >= 4:
-                        dic[model][exp] = dfs
-                except:
-                    pass
+            try: 
+                dfs = parse_avgs(os.path.join(path, exp))
+                if len(dfs) >= 4:
+                    dic[model][exp] = dfs
+            except:
+                pass
 
     return dic
 
@@ -162,8 +161,9 @@ def create_comparison(max_models):
     
     return latex
 
-def create_doc():
-    models = ['distg', 'epit', 'adam', 'swinir', 'drcan']
+def create_doc(name=''):
+    #models = ['epit', 'epit_spectral_attention', 'epit_swin']
+    models = ['distg', 'epit', 'adam', 'swinir', 'drcan', 'hat', 'f3dun', 'ssaformer', 'lft', 'det']
     dic = dict([(k, v) for k, v in get_stats(models).items() if k != 'distg_unet'])
     intra, models = create_model_pages(dic, models)
     inter = create_comparison(models)
@@ -171,10 +171,17 @@ def create_doc():
         '\\title{Intra and Inter Model Comparison} \n \\maketitle \\tableofcontents \n' + intra + inter
     )
     dir = 'result_vis/latex'
-    with open(dir+f'/compare.tex', 'w') as fout:
+    with open(dir+f'/compare_{name}.tex', 'w') as fout:
         for i in range(len(latex)):
             fout.write(latex[i])
 
 
 if __name__ == '__main__':
-    create_doc()
+
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--name", type=str, default='')
+    args = parser.parse_args()
+
+    create_doc(name=args.name)

@@ -58,29 +58,6 @@ def plot_central_view(model, exp_name, srs, hrs):
         sr_cv = sr[12]
         hr_cv = hr[12]
 
-        #apply first normalization and clamping to HR image
-        #revert second normalization on SR image
-
-        '''mean1 = 0.0961
-        std1 = 0.1125
-        mean2 = -0.1483
-        std2 = 0.6535
-
-        hr_cv = (hr_cv - mean1) / std1
-        sr_cv = std2*sr_cv + mean2'''
-
-        '''_, axs1 = plt.subplots(1, 2)
-        hr_u8 = (255*(hr_cv + 1)/2).astype(np.uint8)
-        sr_u8 = (255*(sr_cv + 1)/2).astype(np.uint8)
-        x = np.arange(256)
-        hist_hr, _ = np.histogram(hr_u8, bins=256, range=(0, 256))
-        hist_sr, _ = np.histogram(sr_u8, bins=256, range=(0, 256))
-        axs1[0].bar(x, hist_hr)
-        axs1[1].bar(x, hist_sr)
-
-        plt.show()
-        plt.savefig(f'bins_{i}.png')'''
-
         bc = torch.from_numpy(hr_cv).unsqueeze(0).unsqueeze(0)
         bc = F.interpolate(bc, scale_factor=0.25, mode='bicubic')
         bc = F.interpolate(bc, scale_factor=4, mode='bicubic').squeeze().numpy()
@@ -96,8 +73,8 @@ def plot_central_view(model, exp_name, srs, hrs):
     plt.show()
     path=f'result_vis/imgs/{model}/{exp_name}'
     os.makedirs(path, exist_ok=True)
-    path=path+'/qualitative_results.png'
-    plt.savefig(path)
+    path=path+'/qualitative_results.pdf'
+    plt.savefig(path, format='pdf', dpi=600)
     plt.close()
 
     return path

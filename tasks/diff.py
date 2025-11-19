@@ -43,7 +43,7 @@ class DIFFTrainer(Trainer):
 
     def load_datasets(self, train_data_list, test_data_list, batch_size):
         return load_data(
-            train_data_list, test_data_list, batch_size, train_data=LightFieldTestDataset, test_data=LightFieldTestDataset
+            train_data_list, test_data_list, batch_size, train_data=LightFieldDataset, test_data=LightFieldTestDataset
         )
 
     def train_step(self, hr):

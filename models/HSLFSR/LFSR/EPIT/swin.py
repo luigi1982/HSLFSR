@@ -110,16 +110,15 @@ class EPISWinTBlock(nn.Module):
             [*(qk.chunk(2, dim=-1)), x]
         )
 
-        #compute attention scores
-        A = einsum(q, k, 'b p h l1 d, b p h l2 d -> b p h l1 l2')
-        #positional embeddings
-        A = A + self.pos_embeddings[None, None, None, :, :]
         #mask if shifted
         if shifted:
-            A[:, -1, :] = A[:, -1, :] + self.attn_mask
-        #apply softmax
-        A = F.softmax(A, dim=-1)
-        buffer = einsum(A, v, 'b p h l1 l2, b p h l1 d -> b p h l1 d')
+            _, p, heads, l, _ = q.size()
+            attn_mask = torch.zeros((p, heads, l, l), device=q.device)
+            attn_mask[-1, :] = self.attn_mask
+        buffer = F.scaled_dot_product_attention(
+            q, k, v,
+            attn_mask = None if not shifted else attn_mask
+        )
         buffer = rearrange(buffer, 'b p h l d -> b p l (h d)')
 
         #residual connection 1
@@ -137,7 +136,7 @@ class EPISWinTBlock(nn.Module):
     
 
 class EPIT(nn.Module):
-    def __init__(self, channels, ang_res=5, version='v1', use_as_encoder=False):
+    def __init__(self, channels, ang_res=5, version='v2', use_as_encoder=False):
         super().__init__()
 
         self.ang_res = ang_res
@@ -149,7 +148,7 @@ class EPIT(nn.Module):
         )
 
         self.EPI_features = nn.Sequential(
-            *[AltFilter(channels, shifted=(i%2==1), version=version) for i in range(5)]
+            *[AltFilter(channels, shifted=(i%2==1), version=version) for i in range(3)]
         )
 
         self.upsampling = nn.Sequential(

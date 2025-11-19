@@ -14,13 +14,14 @@ parser = ArgumentParser(description="Training script with config files")
 parser.add_argument("--task", default='lfsr')
 parser.add_argument("--config", action=ActionConfigFile)
 parser.add_argument("--from_checkpoint", default=False)
+parser.add_argument("--modification", default=None)
 parser.add_class_arguments(TrainConfig, nested_key="train")
 cfg = parser.parse_args()
 
 EPOCHS=cfg.train.epochs
 BS=cfg.train.batch_size
 DEVICE=cfg.train.device
-MODEL=cfg.train.model.model
+MODEL=cfg.modification if cfg.modification else cfg.train.model.model
 EXP_NAME = cfg.train.name
 EVAL_BS=cfg.train.evaluation.batch_size
 EVAL_STEP=cfg.train.evaluation.eval_step
@@ -46,6 +47,10 @@ if cfg.task == 'diff':
     #load the model
     denoise_fn = MODEL_REGISTRY['distg_unet'](32, 32, 32)
     encoder_fn = MODEL_REGISTRY['epit'](32, use_as_encoder=True)
+
+    #load encoder model
+    ENC_PATH='models_/epit/training/dim=32-1114-1821/net_epoch_80.pth'
+    encoder_fn.load_state_dict(torch.load(ENC_PATH, weights_only=True))
 
     #instatiate the trainer class
     trainer = trainer(

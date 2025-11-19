@@ -122,7 +122,7 @@ def create_model_desc(model, exp_name, df):
 
 def create_documentation(model, exp_name, dfs, fraunhofer_available=True):
 
-    title= rf'''\title{{Model {model}, Experiment {exp_name}}}
+    title= rf'''\title{{Model {model}, Experiment {exp_name.replace('_', '\_')}}}
     \maketitle
     '''
     model_desc=create_model_desc(model, exp_name, dfs['Train Loss'])

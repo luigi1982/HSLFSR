@@ -2,4 +2,4 @@
 set -e
 
 source .venv/bin/activate
-python diffusion/train.py --config configs/distg_unet.yaml
+python tasks/train.py --task diff --config configs/distg_unet.yaml

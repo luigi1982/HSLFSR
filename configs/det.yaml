@@ -3,19 +3,16 @@
     "epochs": 80,
     "batch_size": 16,
     "device": "cuda:0",
-    "name": "run1",
+    "name": "real_data-run1",
     "optim": {
       "name": "adam",
       "lr": 0.0002,
-      "lr_decay_steps": 35, 
+      "lr_decay_steps": 15, 
       "gamma": 0.5
     },
     "model": {
-      "model": "distg_unet",
+      "model": "det",
       "dim": 32
-    },
-    "evaluation": {
-      "eval_step": 5
     }
   }
 }
