@@ -3,7 +3,7 @@
     "epochs": 80,
     "batch_size": 64,
     "device": "cuda:0",
-    "name": "kernel-size=3x3x3x3",
+    "name": "ks=3_new_arrangement",
     "optim": {
       "name": "adam",
       "lr": 0.0001,

@@ -1,22 +1,24 @@
+import torch
 from torch import nn
 from torch.nn import functional as F
-from einops import rearrange
+from einops import rearrange, einsum
+import math
 
-from models.LFSR.det import ConvNet, SpatialTrans, AngTrans, FeatureAggregation
+from models.LFSR.det import ConvNet, SpatialTrans, FeatureAggregation
+from models.HSLFSR.LFSR.DET.swin_angular import AngTrans
 
 class CascadedAngTrans(nn.Module):
     def __init__(self, dim, num_heads, m):
         super().__init__()
         self.m = m
         self.transs = nn.ModuleList(
-            [AngTrans(dim, num_heads, m) for _ in range(3)]
+            [AngTrans(dim, num_heads, m, shifted=(i+1)%2==0) for i in range(2)]
         )
 
     def forward(self, x):
         for trans in self.transs:
-             x = trans(x)
-             x = x = rearrange(x, '(b h mh w mw) n c -> b c n (h mh) (w mw)', h=32//self.m, w=32//self.m, mh=self.m, mw=self.m)
-
+            x = trans(x)
+            x = rearrange(x, '(b h mh w mw) n c -> b c n (h mh) (w mw)', h=32//self.m, w=32//self.m, mh=self.m, mw=self.m)
         return x
 
 

@@ -3,12 +3,12 @@ set -e
 
 source .venv/bin/activate
 
-config=("f3dun")
-models=("f4dun")
+config=("det")
+models=("swin_angular_cascaded" "swin_angular" "ablation_angular")
 task="lfsr"
 
 for model in "${models[@]}"
 do
     echo "Training: $config $model"
-    python tasks/train.py --task $task --config configs/$config.yaml --modification $model
+    python tasks/train.py --task $task --config configs/$config.yaml --modification ${config}_$model
 done

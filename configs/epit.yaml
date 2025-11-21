@@ -3,7 +3,7 @@
     "epochs": 80,
     "batch_size": 32,
     "device": "cuda:1",
-    "name": "dim=32",
+    "name": "dim=64",
     "optim": {
       "name": "adam",
       "lr": 0.0002,
@@ -12,7 +12,7 @@
     },
     "model": {
       "model": "epit",
-      "dim": 32
+      "dim": 64
     }
   }
 }

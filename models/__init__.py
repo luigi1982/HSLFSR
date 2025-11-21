@@ -25,6 +25,12 @@ from .HSLFSR.LFSR.EPIT.extra_token import EPIT as EPIT_extra_token
 from .HSLFSR.LFSR.EPIT.spectral_branch import EPIT as EPIT_spectral_branch
 from .HSLFSR.LFSR.EPIT.swin import EPIT as EPIT_swin
 from .HSLFSR.LFSR.EPIT.spectral_attention import EPIT as EPIT_spectral_attention
+from .HSLFSR.LFSR.EPIT.hfa import EPIT as EPIT_hfa
+
+#DET
+from .HSLFSR.LFSR.DET.ablation_angular import DET as DET_ablation_angular
+from .HSLFSR.LFSR.DET.swin_angular import DET as DET_swin_angular
+from .HSLFSR.LFSR.DET.swin_angular_cascaded import DET as DET_swin_angular_cascaded
 
 #DRCAN
 from .HSLFSR.SISR.DRCAN.drcan_concat import DRCAN_concat
@@ -54,11 +60,17 @@ MODEL_REGISTRY = {
     "epit_swin": EPIT_swin,
     "epit_spectral_branch": EPIT_spectral_branch,
     "epit_spectral_attention": EPIT_spectral_attention,
+    "epit_hfa": EPIT_hfa,
+
+    #DET
+    "det_ablation_angular": DET_ablation_angular,
+    "det_swin_angular": DET_swin_angular,
+    "det_swin_angular_cascaded": DET_swin_angular_cascaded,
 
     #DRCAN
     "drcan_concat": DRCAN_concat,
     "drcan_film": DRCAN_FiLM,
 
     #F3DUN
-    "f4dun": F4DUN,
+    "f3dun_f4dun": F4DUN,
 }

@@ -28,6 +28,9 @@ class LightFieldDataset(Dataset):
 
         with h5py.File(path, 'r') as hf:
             LF = np.array(hf.get('LF'))
+            LF = LF.reshape((5, 5, 128, 128))
+            LF[1::2] = LF[1::2, ::-1]
+            LF = LF.reshape((25, 128, 128))
 
         if self.transform is not None:
             LF = self.transform(LF)
@@ -59,6 +62,9 @@ class LightFieldTestDataset(Dataset):
 
         with h5py.File(self.file_list[index], 'r') as hf:
             LF = np.array(hf.get('HR'))
+            LF = LF.reshape((5, 5, 410, 410))
+            LF[1::2] = LF[1::2, ::-1]
+            LF = LF.reshape((25, 410, 410))
 
         #LF = np.transpose(LF, (2, 0, 1)) for synthetic datasets
 

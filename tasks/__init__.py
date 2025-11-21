@@ -6,8 +6,7 @@ import torch
 from datetime import datetime
 import os
 import h5py
-
-from dataset import LightFieldDataset, LightFieldTestDataset
+from matplotlib import pyplot as plt
 
 from utils.utils import *
 from utils.metrics import *
@@ -205,6 +204,38 @@ class Trainer():
         raise NotImplementedError
 
 
+class Evaluater():
 
+    def __init__(self, exp_name, model_name, model, 
+            train_data_list, test_data_list,
+            epochs, device, batch_size,
+            test_batch_size, evaluation_step, save_lfs_step,
+            criterion=torch.nn.L1Loss(),
+            optimizer=Adam, lr=2e-4, lr_decay_steps=15, gamma=0.5,
+            cross_val_run=None,
+            start_epoch=0):
+
+        super().__init__(
+            exp_name, model_name, model, 
+            train_data_list, test_data_list,
+            epochs, device, batch_size,
+            test_batch_size, 
+            evaluation_step, save_lfs_step,
+            optimizer=optimizer, lr=lr, lr_decay_steps=lr_decay_steps, gamma=gamma,
+            cross_val_run=cross_val_run,
+            start_epoch=start_epoch
+        )
+
+        dir = f'runs/{model_name}/training/{exp_name}' if cross_val_run is None else f'runs/{model_name}/cross_val/{cross_val_run}/{exp_name}'
+        self.writer = SummaryWriter(dir)
+        self.metrics = ['SSIM', 'PSNR', 'SAM', 'SRE']
+        self.data_list = test_data_list
+
+        ### saving LFs and models
+        self.save_lfs_path = os.path.join(
+            'results', model_name, 'training' if cross_val_run is None else 'cross_val', exp_name
+        )
+    
+    
 
             
