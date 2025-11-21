@@ -15,7 +15,6 @@ class ResBlock(nn.Module):
         )
 
     def forward(self, x):
-        print(x.shape)
         return x + self.conv(x)
     
 class F4DUN(nn.Module):
@@ -44,11 +43,7 @@ class F4DUN(nn.Module):
         #initial convolution
         buffer1 = rearrange(x, 'b (c u v) h w -> b c u v h w', c=1, u=5)
 
-        print(buffer1.shape)
         buffer1 = self.init_conv(buffer1)
-        print(buffer1.shape)
-
-        print('initial conv over')
 
         #shallow half
         h = [] #save skip connections

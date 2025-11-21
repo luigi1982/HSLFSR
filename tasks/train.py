@@ -41,6 +41,20 @@ trainer = getattr(pkg, cls_name)
 train_data_list = ['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors']
 test_data_list = ['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors']
 
+def set_seed(seed=42):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+    # Ensures deterministic behavior
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+    # PyTorch 2.0+ extra safety
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+
+set_seed(42)
+
 
 if cfg.task == 'diff':
 

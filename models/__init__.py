@@ -30,6 +30,9 @@ from .HSLFSR.LFSR.EPIT.spectral_attention import EPIT as EPIT_spectral_attention
 from .HSLFSR.SISR.DRCAN.drcan_concat import DRCAN_concat
 from .HSLFSR.SISR.DRCAN.drcan_film import DRCAN_FiLM
 
+#F3DUN
+from .HSLFSR.HSISR.F3DUN.f4dun import F4DUN
+
 MODEL_REGISTRY = {
     "epit": EPIT,
     "lft": LFT,
@@ -54,5 +57,8 @@ MODEL_REGISTRY = {
 
     #DRCAN
     "drcan_concat": DRCAN_concat,
-    "drcan_film": DRCAN_FiLM
+    "drcan_film": DRCAN_FiLM,
+
+    #F3DUN
+    "f4dun": F4DUN,
 }
