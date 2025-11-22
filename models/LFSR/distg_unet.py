@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from einops import rearrange
 import math
 
 from models.LFSR.distg import DistgBlock, SFEConv
@@ -122,6 +123,8 @@ class DISTG_UNET(nn.Module):
     def forward(self, x, cond, t):
 
         #cond and x are expected to be MacPis
+        x = rearrange(x, 'b c (u v) h w -> b c (h u) (w v)', u=5, v=5)
+        cond = rearrange(cond, 'b c (u v) h w -> b c (h u) (w v)', u=5, v=5)
         
         cond = self.cond_proj(cond)
         x = self.init_conv(x) + cond

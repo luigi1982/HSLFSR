@@ -155,12 +155,12 @@ class EPIT(nn.Module):
 
         # x is shape B x C x UV x H x W
         # reshape to B x C x UV x HW for upsampling
-        x_up = rearrange(x, 'b c (u v) h w -> b c (u h) (v w)', u=self.ang_res, v=self.ang_res)
+        x_up = rearrange(x, 'b c (u v) h w -> (b u v) c h w', u=self.ang_res, v=self.ang_res)
         x_up = self.upsampling(x_up)
-        x_up = rearrange(x_up, 'b c (u h) (v w) -> b c (u v) h w', h=4*h, w=4*w, u=self.ang_res, v=self.ang_res)
+        x_up = rearrange(x_up, '(b u v) c h w -> b c (u v) h w', h=4*h, w=4*w, u=self.ang_res, v=self.ang_res)
 
         if self.use_as_encoder:
-            return x_up, rearrange(x, 'b c (u v) h w -> b c (h u) (w v)', u=self.ang_res, v=self.ang_res)
+            return x_up, x
         else:
             x_up = x_up.view((-1, 25, 128, 128))
             return x_up

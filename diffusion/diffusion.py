@@ -72,10 +72,9 @@ class GaussianDiffusion(nn.Module):
         xt, noise = self.q_sample(x0, t)
         #predict noise
         #reshape xt to MacPi
-        xt = rearrange(xt, 'b c (u v) h w -> b c (h u) (w v)', u=5, v=5)
         noise_pred = self.denoise_fn(xt, cond, t)
 
-        return noise_pred, rearrange(noise, 'b c (u v) h w -> b c (h u) (w v)', u=5, v=5)
+        return noise_pred, rearrange(noise, 'b c n h w -> (b c) n h w')
     
     @torch.no_grad()
     def p_sample(self, lr, scale=4, noise=None, use_enc_ups=True):
