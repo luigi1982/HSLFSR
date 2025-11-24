@@ -21,7 +21,8 @@ class Trainer():
             test_batch_size, 
             evaluation_step, save_lfs_step,
             optimizer=Adam, lr=2e-4, lr_decay_steps=15, gamma=0.5,
-            cross_val_run=None,
+            mode='train',
+            cross_val_run =None,
             start_epoch=0
         ):
 
@@ -47,24 +48,44 @@ class Trainer():
             gamma=gamma
         )
 
-        ### Set up Tensorboard
-        if start_epoch == 0:
-            name = exp_name
+        ### Set up Tensorboard 
+        ### and directories for saving models
+
+        if mode == 'training':
+
+            if start_epoch == 0:
+                now = datetime.now()
+                now = now.strftime('%m%d-%H%M')
+                exp_name = exp_name+'-'+now 
+
+            dir = f'runs/{model_name}/{mode}/{exp_name}' 
+            save_model_path = ['models_', model_name, 'training', exp_name]
+
+        elif mode == 'cross_val':     
+            
             now = datetime.now()
             now = now.strftime('%m%d-%H%M')
-            exp_name = name+'-'+now if cross_val_run is None else name
-            
-        dir = f'runs/{model_name}/training/{exp_name}' if cross_val_run is None else f'runs/{model_name}/cross_val/{cross_val_run}/{exp_name}'
+            cross_val_run = cross_val_run+'-'+now 
+            dir = f'runs/{model_name}/cross_val/{cross_val_run}/{exp_name}'
+            save_model_path =  ['models_', model_name, mode, cross_val_run, exp_name]
+
+        elif mode == 'evaluate':
+
+            dir = f'runs/{model_name}/{mode}/{exp_name}'
+
         self.writer = SummaryWriter(dir)
         self.metrics = ['SSIM', 'PSNR', 'SAM', 'SRE']
+        self.best_psnr = 0
         self.data_list = test_data_list
+
+        if mode in ['training', 'cross_val']:
+            self.save_model_path = os.path.join(*save_model_path)
 
         ### saving LFs and models
         self.save_lfs_path = os.path.join(
-            'results', model_name, 'training' if cross_val_run is None else 'cross_val', exp_name
+            'results', model_name, mode, exp_name
         )
-        save_model_path = ['models_', model_name, 'training', exp_name] if cross_val_run is None else ['models_', model_name, 'cross_val', cross_val_run, exp_name]
-        self.save_model_path = os.path.join(*save_model_path)
+
     def training(self):
 
         self.model.to(self.device)
@@ -117,7 +138,10 @@ class Trainer():
                 save_lfs = (epoch+1)%self.save_lfs_step == 0
                 self.evaluate(epoch, save_lfs)
 
-    def evaluate(self, epoch, save_lfs):
+    def evaluate(self, epoch, save_lfs, save_model=True):
+
+        #move model to device
+        self.model.to(self.device)
         
         #loop over test data
 
@@ -128,12 +152,18 @@ class Trainer():
         sam = torch.zeros(num_test)
         sre = torch.zeros(num_test)
 
+        ssim_per_v = torch.zeros((num_test, 5, 5))
+        psnr_per_v = torch.zeros((num_test, 5, 5))
+
         for i, test_loader in tqdm(enumerate(self.test_loaders), total=len(self.test_loaders)):
 
             ssim_set = torch.zeros(len(test_loader))
             psnr_set = torch.zeros(len(test_loader))
             sam_set = torch.zeros(len(test_loader))
             sre_set = torch.zeros(len(test_loader))
+
+            ssim_per_v_set = torch.zeros((len(test_loader), 25))
+            psnr_per_v_set = torch.zeros((len(test_loader), 25))
             
             for j, LF in enumerate(test_loader):
 
@@ -157,7 +187,7 @@ class Trainer():
                 LF_target = LF_target.squeeze()
 
                 #PSNR and SSIM
-                ssim_set[j], psnr_set[j] = compute_psnr_ssim(LF_out, LF_target)
+                ssim_set[j], psnr_set[j], ssim_per_v_set[j], psnr_per_v_set[j] = compute_psnr_ssim(LF_out, LF_target)
                 #SAM
                 sam_set[j] = compute_sam(LF_out, LF_target)
                 #SRE
@@ -175,10 +205,19 @@ class Trainer():
             sam[i] = sam_set.mean()
             sre[i] = sre_set.mean()
 
+            ssim_per_v[i] = torch.permute(ssim_per_v_set, (1, 0)).mean(dim=-1).view((5, 5))
+            psnr_per_v[i] = torch.permute(psnr_per_v_set, (1, 0)).mean(dim=-1).view((5, 5))
+
         for name, metric in zip(self.metrics, [ssim, psnr, sam, sre]):
 
             self.writer.add_scalars(
                 name, dict(zip(self.data_list, metric)), global_step=epoch+1
+            )
+
+        for name, metric in zip(['SSIM_pV', 'PSNR_pV'], [ssim_per_v, psnr_per_v]):
+
+            self.writer.add_images(
+                name, metric.unsqueeze(1), global_step=epoch+1
             )
 
         print(
@@ -190,9 +229,14 @@ class Trainer():
         )
 
         ### save the model
-        model_path = self.save_model_path
-        os.makedirs(model_path, exist_ok=True)
-        torch.save(self.model.state_dict(), model_path + f'/net_epoch_{epoch+1}.pth')
+        if psnr.mean() > self.best_psnr and save_model:
+            print(
+                f'Saving model - beat previously best PSNR by {psnr.mean() - self.best_psnr:.3f} dB'
+            )
+            self.best_psnr = psnr.mean()
+            model_path = self.save_model_path
+            os.makedirs(model_path, exist_ok=True)
+            torch.save(self.model.state_dict(), model_path + f'/net_epoch_{epoch+1}.pth')
 
     def train_step(self, x):
         raise NotImplementedError 
@@ -202,39 +246,6 @@ class Trainer():
     
     def load_datasets(self, train_data_list, test_data_list, batch_size, use_train_as_test=False):
         raise NotImplementedError
-
-
-class Evaluater():
-
-    def __init__(self, exp_name, model_name, model, 
-            train_data_list, test_data_list,
-            epochs, device, batch_size,
-            test_batch_size, evaluation_step, save_lfs_step,
-            criterion=torch.nn.L1Loss(),
-            optimizer=Adam, lr=2e-4, lr_decay_steps=15, gamma=0.5,
-            cross_val_run=None,
-            start_epoch=0):
-
-        super().__init__(
-            exp_name, model_name, model, 
-            train_data_list, test_data_list,
-            epochs, device, batch_size,
-            test_batch_size, 
-            evaluation_step, save_lfs_step,
-            optimizer=optimizer, lr=lr, lr_decay_steps=lr_decay_steps, gamma=gamma,
-            cross_val_run=cross_val_run,
-            start_epoch=start_epoch
-        )
-
-        dir = f'runs/{model_name}/training/{exp_name}' if cross_val_run is None else f'runs/{model_name}/cross_val/{cross_val_run}/{exp_name}'
-        self.writer = SummaryWriter(dir)
-        self.metrics = ['SSIM', 'PSNR', 'SAM', 'SRE']
-        self.data_list = test_data_list
-
-        ### saving LFs and models
-        self.save_lfs_path = os.path.join(
-            'results', model_name, 'training' if cross_val_run is None else 'cross_val', exp_name
-        )
     
     
 

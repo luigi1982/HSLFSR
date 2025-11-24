@@ -21,6 +21,7 @@ class DIFFTrainer(Trainer):
             test_batch_size, evaluation_step, save_lfs_step,
             criterion=torch.nn.L1Loss(),
             optimizer=Adam, lr=2e-4, lr_decay_steps=15, gamma=0.5,
+            mode='training',
             cross_val_run=None
         ):
 
@@ -36,6 +37,7 @@ class DIFFTrainer(Trainer):
             test_batch_size, 
             evaluation_step, save_lfs_step,
             optimizer=optimizer, lr=lr, lr_decay_steps=lr_decay_steps, gamma=gamma,
+            mode=mode,
             cross_val_run=cross_val_run
         )
 

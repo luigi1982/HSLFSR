@@ -35,4 +35,4 @@ def compute_psnr_ssim(x, target):
         ssim_v[i] = ssim(x[i].numpy(), target[i].numpy(), data_range=1)
         psnr_v[i] = psnr(x[i].numpy(), target[i].numpy(), data_range=1)
 
-    return ssim_v.mean(), psnr_v.mean()
+    return ssim_v.mean(), psnr_v.mean(), ssim_v, psnr_v

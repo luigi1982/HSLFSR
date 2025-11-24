@@ -11,17 +11,30 @@ def create_mask(m, displacement, upper_lower, left_right, A=5):
     l = (m*A)**2
     mask = torch.zeros(l, l)
 
+    # Token layout in your MacPi is: (u, mh, v, mw)
+    # We'll interpret both axes of the LxL mask this way.
+    mask = rearrange(
+        mask,
+        '(u mh v mw) (u2 mh2 v2 mw2) -> u mh v mw u2 mh2 v2 mw2',
+        u=A, v=A, mh=m, mw=m, u2=A, v2=A, mh2=m, mw2=m
+    )
+    # axes: 0:u, 1:mh, 2:v, 3:mw, 4:u2, 5:mh2, 6:v2, 7:mw2
+
     if upper_lower:
-        mask = rearrange(mask, '(mu1 u1 mv1 v1) (mu2 u2 mv2 v2) -> mu1 u1 mv1 v1 mu2 u2 mv2 v2', u1=5, mu1=m, v1=5, mv1=m, u2=5, mu2=m, v2=5, mv2=m)
-        mask[-displacement:, :, :, :, :-displacement, :, :, :] = float("inf")
-        mask[:-displacement, :, :, :, -displacement:, :, :, :] = float("inf")
-        mask = rearrange(mask, 'mu1 u1 mv1 v1 mu2 u2 mv2 v2 -> (mu1 u1 mv1 v1) (mu2 u2 mv2 v2)')
+        # vertical boundary: mh and mh2
+        mask[:, -displacement:, :, :, :, :-displacement, :, :] = -float("inf")
+        mask[:, :-displacement, :, :, :, -displacement:, :, :] = -float("inf")
 
     if left_right:
-        mask = rearrange(mask, '(mu1 u1 mv1 v1) (mu2 u2 mv2 v2) -> mu1 u1 mv1 v1 mu2 u2 mv2 v2', u1=5, mu1=m, v1=5, mv1=m, u2=5, mu2=m, v2=5, mv2=m)
-        mask[:, :, -displacement:, :, :, :, :-displacement, :] = float("inf")
-        mask[:, :, :-displacement, :, :, :, -displacement:, :] = float("inf")
-        mask = rearrange(mask, 'mu1 u1 mv1 v1 mu2 u2 mv2 v2 -> (mu1 u1 mv1 v1) (mu2 u2 mv2 v2)')
+        # horizontal boundary: mw and mw2
+        mask[:, :, :, -displacement:, :, :, :, :-displacement] = -float("inf")
+        mask[:, :, :, :-displacement, :, :, :, -displacement:] = -float("inf")
+
+    # back to (L, L)
+    mask = rearrange(
+        mask,
+        'u mh v mw u2 mh2 v2 mw2 -> (u mh v mw) (u2 mh2 v2 mw2)'
+    )
 
     return mask
 
@@ -67,7 +80,7 @@ class AngTrans(nn.Module):
     def forward(self, x, A=5):
 
         #input is expected to be SAI B x C x N x H x W 
-        # reshape to batch of MacPis  
+        # reshape to batch of largescale m x m MacPis  
 
         if self.shifted:
             x = self.cyclic_shift(x)
@@ -84,6 +97,7 @@ class AngTrans(nn.Module):
 
         attn = self.scale * einsum(q, k, 'b h l1 d, b h l2 d -> b h l1 l2')
         if self.shifted:
+            #reshape tensor so that batch dimension is split into B x H x W
             attn = rearrange(attn, '(b h w) hds l1 l2 -> b h w hds l1 l2 ', h=32//self.m, w=32//self.m)
             attn[:, -1, :, :] =  attn[:, -1, :, :] + self.upper_lower_mask
             attn[:, :, -1, :] = attn[:, :, -1, :] + self.left_right_mask
