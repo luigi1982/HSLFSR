@@ -10,7 +10,7 @@ def get_lfsr_paths(model, exp_name):
 
     scene_paths = []
 
-    path=os.path.join('results', model, 'training', exp_name)
+    path=os.path.join('results', model, 'evaluate', exp_name)
     epochs=os.listdir(path)
     nums=[]
     for epoch in epochs:
@@ -32,7 +32,7 @@ def get_lfsr_paths(model, exp_name):
 def get_lfhr_paths():
     scene_paths = []
     path='../datasets'
-    for test in ['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors']: #for test in os.listdir(path):
+    for test in ['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors', 'multi_exposure_rec']: #for test in os.listdir(path):
         print(test)
         test = os.path.join(path, test, 'test_hsi')
         scene=os.listdir(test)[0]

@@ -12,40 +12,50 @@ def parse_tensorboard(path, scalar):
     _absorb_print = ea.Reload()
     return pd.DataFrame(ea.Scalars(scalar))
 
-def parse_images(path, tag):
+def parse_images(path, prefix):
     ea = event_accumulator.EventAccumulator(
         path,
         size_guidance={event_accumulator.IMAGES: 0},
     )
-    print(tag)
-    print(ea.Tags())
     ea.Reload()
-    return ea.Images(tag)
+
+    # list of all image tags
+    image_tags = ea.Tags()["images"]
+
+    # select tags like "SSIM_pV/SceneX"
+    matched_tags = [t for t in image_tags if t.startswith(prefix)]
+
+    # Load all images per tag
+    images = {tag.split('/')[1]: ea.Images(tag) for tag in matched_tags}
+
+    return images
 
 def parse_all(root):
     dfs = {}
     for file in os.listdir(root):
         path = os.path.join(root, file)
         if os.path.isdir(path):
-            scalar = file.split('_')[0]
-            df=parse_tensorboard(path, scalar)
-            dfs[' '.join(file.split('_'))] = df
+            try:
+                scalar = file.split('_')[0]
+                df=parse_tensorboard(path, scalar)
+                dfs[' '.join(file.split('_'))] = df
+            except:
+                pass
         else:
             try:
                 df=parse_tensorboard(path, 'Train Loss')
                 dfs['Train Loss'] = df
             except:
-                try:
-                    df=parse_images(path, 'SSIM_pV')
-                    dfs['SSIM pV'] = df
-                except:
-                    try:
-                        df=parse_images(path, 'PSNR_pV')
-                        dfs['PSNR pV'] = df
-                    except:
-                        pass
+                pass
 
     return dfs
+
+def parse_all_images(root):
+
+    ssim_pv = parse_images(root, "SSIM_pV")
+    psnr_pv = parse_images(root, "PSNR_pV")
+
+    return ssim_pv, psnr_pv
 
 def parse_avgs(root):
     dfs = {}

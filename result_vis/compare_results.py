@@ -162,7 +162,7 @@ def create_comparison(max_models):
     return latex
 
 def create_doc(name=''):
-    models = ['epit', 'epit_swin', 'epit_hfa', 'f3dun_f4dun', 'det_swin_angular_cascaded']
+    models = ['det', 'det_swin_angular_cascaded', "det_swin_angular", "det_ablation_angular", 'f3dun']
     #models = ['distg', 'epit', 'adam', 'swinir', 'drcan', 'hat', 'f3dun', 'ssaformer', 'lft', 'det']
     dic = dict([(k, v) for k, v in get_stats(models).items() if k != 'distg_unet'])
     intra, models = create_model_pages(dic, models)

@@ -72,6 +72,7 @@ class Trainer():
         elif mode == 'evaluate':
 
             dir = f'runs/{model_name}/{mode}/{exp_name}'
+            self.save_path = f'runs/{model_name}/{mode}/{exp_name}'
 
         self.writer = SummaryWriter(dir)
         self.metrics = ['SSIM', 'PSNR', 'SAM', 'SRE']
@@ -138,7 +139,7 @@ class Trainer():
                 save_lfs = (epoch+1)%self.save_lfs_step == 0
                 self.evaluate(epoch, save_lfs)
 
-    def evaluate(self, epoch, save_lfs, save_model=True):
+    def evaluate(self, epoch, save_lfs, save_model=True, save_pV=False):
 
         #move model to device
         self.model.to(self.device)
@@ -214,11 +215,14 @@ class Trainer():
                 name, dict(zip(self.data_list, metric)), global_step=epoch+1
             )
 
-        for name, metric in zip(['SSIM_pV', 'PSNR_pV'], [ssim_per_v, psnr_per_v]):
-
-            self.writer.add_images(
-                name, metric.unsqueeze(1), global_step=epoch+1
-            )
+        if save_pV:
+            for name, metric in zip(['SSIM_pV', 'PSNR_pV'], [ssim_per_v, psnr_per_v]):
+                path = os.path.join(self.save_path, 'per_view_statistics')
+                os.makedirs(path, exist_ok=True)
+                path = os.path.join(path, f'{name}.h5')
+                with h5py.File(path, 'w') as f:
+                    for idx, data_name in enumerate(self.data_list):
+                        f.create_dataset(name=data_name, data=metric[idx])
 
         print(
             f'SSIM: {ssim.mean():.3f}; PSNR: {psnr.mean():.3f}; SAM: {sam.mean():.3f}; SRE: {sre.mean():.3f}'

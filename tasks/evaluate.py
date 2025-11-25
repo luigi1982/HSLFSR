@@ -87,4 +87,4 @@ else:
     )
 
 #start training
-trainer.evaluate(0, True, save_model=False)
+trainer.evaluate(0, True, save_model=False, save_pV=True)

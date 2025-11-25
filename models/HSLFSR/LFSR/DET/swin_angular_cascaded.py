@@ -7,6 +7,8 @@ import math
 from models.LFSR.det import ConvNet, SpatialTrans, FeatureAggregation
 from models.HSLFSR.LFSR.DET.swin_angular import AngTrans
 
+### cascade two angular transformer with large scale macro-pixel size m=4
+
 class CascadedAngTrans(nn.Module):
     def __init__(self, dim, num_heads, m):
         super().__init__()
