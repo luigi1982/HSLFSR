@@ -11,6 +11,7 @@ from get_results import parse_all
 from gen_latex import wrap_in_latex, latex_figure
 from get_lightfields import get_lfhr_paths, get_lfsr_paths
 from master_qual_plots import create_single_qual_plot
+from get_model_stats import get_model_stats
 
 
 def get_stats(models, exps):
@@ -18,12 +19,20 @@ def get_stats(models, exps):
     ### load all the statistics for the specified experiments
 
     dic = {}
+    stats = {}
     for model, exp in zip(models, exps):
         path = os.path.join('runs', model, 'evaluate', exp)
         dfs = parse_all(path)
         dic[model] = dfs
 
-    return dic
+        stats[model] = {}
+        num_params, num_flops = get_model_stats(model)
+        num_params /= 10e6
+        num_flops /= 10e6
+        stats[model]['prms'] = num_params
+        stats[model]['flops'] = num_flops
+
+    return dic, stats
 
 def get_per_view_stats(models, exps):
 
@@ -51,20 +60,20 @@ def check_evaluation(model, exp):
         script_path = os.path.abspath(script_path)
         subprocess.call([script_path, model, exp])
 
-def create_metrics_table(dicts):
+def create_metrics_table(dicts, stats):
 
     #create a table with a column for each model in dicts
     #and a column for every Metric, i.e. PSNR, SSIM, SAM and SRE
 
     latex = r'''
     \begin{center}
-        \begin{tabular}{c | c c c c}
-            & PSNR & SSIM & SAM & SRE \\
+        \begin{tabular}{c | c c c c || c c}
+            & PSNR & SSIM & SAM & SRE & \#Prm. & \#FlOps \\
             \hline'''
         
     for i, model in enumerate(dicts.keys()):
         latex += rf'''
-            {model} & {dicts[model]['Avg PSNR']['value'][0]:.2f} & {dicts[model]['Avg SSIM']['value'][0]:.4f} & {dicts[model]['Avg SAM']['value'][0]:.4f} & {dicts[model]['Avg SRE']['value'][0]:.2f}'''
+            {model} & {dicts[model]['Avg PSNR']['value'][0]:.2f} & {dicts[model]['Avg SSIM']['value'][0]:.4f} & {dicts[model]['Avg SAM']['value'][0]:.4f} & {dicts[model]['Avg SRE']['value'][0]:.2f} & {stats[model]['prms']:.2f} & {stats[model]['flops']:.2f}'''
         
         if i < len(dicts.keys()) - 1:
             latex += '\\\\'
@@ -166,10 +175,10 @@ def main():
     for model, exp in zip(models, exps):
         check_evaluation(model, exp)
 
-    dicts = get_stats(models, exps)
+    dicts, stats = get_stats(models, exps)
     psnr_pv, ssim_pv = get_per_view_stats(models, exps)
 
-    latex = create_metrics_table(dicts)
+    latex = create_metrics_table(dicts, stats)
     latex += per_view_statistics(psnr_pv, ssim_pv)
     latex += qualitative_results(models, exps)
     latex = wrap_in_latex(latex)
