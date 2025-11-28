@@ -31,6 +31,8 @@ from .HSLFSR.LFSR.EPIT.hfa import EPIT as EPIT_hfa
 from .HSLFSR.LFSR.DET.ablation_angular import DET as DET_ablation_angular
 from .HSLFSR.LFSR.DET.swin_angular import DET as DET_swin_angular
 from .HSLFSR.LFSR.DET.swin_angular_cascaded import DET as DET_swin_angular_cascaded
+from .HSLFSR.LFSR.DET.swin_spatial import DET as DET_swin_spatial
+from .HSLFSR.LFSR.DET.swin_angular_spatial import DET as DET_swin_angular_spatial
 
 #DRCAN
 from .HSLFSR.SISR.DRCAN.drcan_concat import DRCAN_concat
@@ -66,6 +68,8 @@ MODEL_REGISTRY = {
     "det_ablation_angular": DET_ablation_angular,
     "det_swin_angular": DET_swin_angular,
     "det_swin_angular_cascaded": DET_swin_angular_cascaded,
+    "det_swin_spatial": DET_swin_spatial,
+    "det_swin_angular_spatial": DET_swin_angular_spatial,
 
     #DRCAN
     "drcan_concat": DRCAN_concat,

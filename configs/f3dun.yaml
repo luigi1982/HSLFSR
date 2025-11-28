@@ -2,8 +2,8 @@
   "train": {
     "epochs": 80,
     "batch_size": 64,
-    "device": "cuda:0",
-    "name": "ks=3_new_arrangement",
+    "device": "cuda:1",
+    "name": "new_arrangement",
     "optim": {
       "name": "adam",
       "lr": 0.0001,

@@ -122,14 +122,18 @@ class DISTG_UNET(nn.Module):
 
     def forward(self, x, cond, t):
 
-        #cond and x are expected to be MacPis
-        x = rearrange(x, 'b c (u v) h w -> b c (h u) (w v)', u=5, v=5)
+        #cond and x are expected to be stacked SAIs
+        x = rearrange(x, 'b (u v) h w -> b (h u) (w v)', u=5, v=5)
+        x = x.unsqueeze(1)
         cond = rearrange(cond, 'b c (u v) h w -> b c (h u) (w v)', u=5, v=5)
         
         cond = self.cond_proj(cond)
         x = self.init_conv(x) + cond
         x = self.unet(x, t)
         x = self.out_conv(x)
+
+        #rearrange tiled MacPis to stack of SAIs
+        x = rearrange(x, 'b c (h u) (w v) -> (b c) (u v) h w', u=5, v=5)
 
         return x
         

@@ -31,3 +31,56 @@ class LF_divide_integrate(object):
         LF = rearrange(LF_divided, '(numU numV) n h w -> n (numU h) (numV w)',
                        numU=self.numU, numV=self.numV)
         return LF
+    
+
+def gaussian_kernel(ksize=21, sigma=2.0, device="cpu"):
+    """
+    Create 2D Gaussian kernel.
+
+    Args:
+        ksize (int): kernel size (odd).
+        sigma (float): standard deviation of Gaussian.
+    """
+    assert ksize % 2 == 1, "ksize should be odd"
+
+    ax = torch.arange(ksize, device=device) - (ksize - 1) / 2.0
+    xx, yy = torch.meshgrid(ax, ax, indexing="ij")
+    kernel = torch.exp(-(xx**2 + yy**2) / (2 * sigma**2))
+    kernel = kernel / kernel.sum()
+    return kernel
+
+def classical_degradation(x, scale_factor=0.25, noise_std=0.01):
+
+    # 1. blur
+    # 2. sample down
+    # 3. add noise
+
+    B, C, H, W = x.shape
+
+    # blur
+
+    blur_kernel = gaussian_kernel(device=x.device)
+
+    kH, kW = blur_kernel.shape[-2:]
+    pad_y = (kH - 1) // 2
+    pad_x = (kW - 1) // 2
+
+    x = F.pad(x, (pad_x, pad_x, pad_y, pad_y), mode="reflect")
+    # Apply depthwise convolution (same kernel per channel)
+    # blur_kernel: (1,1,kH,kW) -> repeat for each channel
+    kernel = blur_kernel.repeat(C, 1, 1, 1)   # (C,1,kH,kW)
+    x = F.conv2d(x, kernel, groups=C)
+
+
+    # sample down
+
+    x = F.interpolate(x, scale_factor=scale_factor, mode='bicubic')
+
+
+    # add noise
+    noise = torch.randn_like(x) * noise_std
+    x = x + noise
+
+    x = x.clamp(0, 1)
+
+    return x

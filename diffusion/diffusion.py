@@ -72,6 +72,7 @@ class GaussianDiffusion(nn.Module):
         xt, noise = self.q_sample(x0, t)
         #predict noise
         #reshape xt to MacPi
+        xt = rearrange(xt, 'b c n h w -> (b c) n h w')
         noise_pred = self.denoise_fn(xt, cond, t)
 
         return noise_pred, rearrange(noise, 'b c n h w -> (b c) n h w')
@@ -84,7 +85,7 @@ class GaussianDiffusion(nn.Module):
             if noise is None:
                 b, uv, h, w = lr.shape
                 u = v = int(math.sqrt(uv))
-                x = torch.randn((b, 1, u*scale*h, v*scale*w), device=device)
+                x = torch.randn((b, u*v, scale*h, scale*w), device=device)
             else:
                 x = noise
 

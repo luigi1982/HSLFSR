@@ -26,6 +26,7 @@ class Trainer():
             start_epoch=0
         ):
 
+        self.mode = mode
         self.model = model
         self.model_name = model_name
         self.start_epoch=start_epoch
@@ -241,6 +242,50 @@ class Trainer():
             model_path = self.save_model_path
             os.makedirs(model_path, exist_ok=True)
             torch.save(self.model.state_dict(), model_path + f'/net_epoch_{epoch+1}.pth')
+
+    def super_resolve(self, LF, index_set, index_scene, degradation_process='bicubic', save_lf=False, scale=4, epoch=0):
+
+        #move model to device
+        self.model.to(self.device)
+
+        if degradation_process == 'id':
+            LF_input = LF
+        elif degradation_process == 'bicubic':
+            LF_input = F.interpolate(LF, scale_factor=0.25, mode='bicubic')
+        elif degradation_process == 'classical':
+            LF_input = classical_degradation(LF)
+
+        target_h = scale*LF_input.size(-2)
+        target_w = scale*LF_input.size(-1)
+
+        #Crop LFs into Patches
+        LF_divide_integrate_func = LF_divide_integrate(4, 32, 16)
+        sub_LF_input = LF_divide_integrate_func.LFdivide(LF_input)
+
+        #SR the Patches
+        sub_LF_out = self.evaluate_step(sub_LF_input)
+
+        #fuse patches back together
+        sub_LF_out = torch.cat(sub_LF_out, dim=0)
+        LF_out = LF_divide_integrate_func.LFintegrate(sub_LF_out).unsqueeze(0)
+        LF_out = LF_out[:, :, 0:target_h, 0:target_w].cpu().to(torch.float32).detach()
+
+        # remove batch dimension
+        LF_out = LF_out.squeeze()
+
+        print(LF_out.shape)
+        
+        ### save result if save_lfs True
+        if save_lf:
+            
+            if self.mode == 'train':
+                save_path = os.path.join(self.save_lfs_path, f'epoch_{epoch+1}', self.data_list[index_set])
+            else:
+                save_path = os.path.join(self.save_lfs_path, degradation_process, self.data_list[index_set])
+
+            os.makedirs(save_path, exist_ok=True)
+            with h5py.File(save_path+f'/scene_{index_scene+1}.h5', 'w') as hf:
+                hf.create_dataset('SR', data=denormalize_hsi(LF_out).numpy())
 
     def train_step(self, x):
         raise NotImplementedError 

@@ -141,8 +141,6 @@ def qualitative_results(models, exps):
 
     hr_paths = sorted(get_lfhr_paths())
 
-    print(hr_paths)
-
     sr_paths = []
 
     for model, exp in zip(models, exps):
