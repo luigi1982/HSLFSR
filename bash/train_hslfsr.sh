@@ -4,7 +4,7 @@ set -e
 source .venv/bin/activate
 
 config=("det")
-models=("swin_angular" "ablation_angular" "swin_spatial" "swin_angular_spatial")
+models=("swin_angular_cascaded" "swin_spatial" "swin_angular_spatial")
 task="lfsr"
 
 for model in "${models[@]}"

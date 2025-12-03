@@ -25,7 +25,7 @@ def latex_figure(caption, path_to_image):
     latex = rf'''
 \begin{{figure}}[h]
     \centering
-    \includegraphics[width=0.7\textwidth]{{{path_to_image}}}
+    \includegraphics[width=0.9\textwidth]{{{path_to_image}}}
     \caption{{{caption}}}
     \label{{fig:{caption}}}
 \end{{figure}}'''

@@ -1,7 +1,7 @@
 {
   "train": {
     "epochs": 80,
-    "batch_size": 32,
+    "batch_size": 16,
     "device": "cuda:0",
     "name": "new_arrangement",
     "optim": {

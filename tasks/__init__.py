@@ -35,24 +35,25 @@ class Trainer():
         self.test_batch_size = test_batch_size
         self.evaluation_step = evaluation_step
         self.save_lfs_step = save_lfs_step
+        self.test_data_list = test_data_list
 
         #load train data and load test data
         self.train_loader, self.test_loaders = self.load_datasets(
             train_data_list, test_data_list, batch_size
         ) 
 
-        #set the optimizer
-        self.opt = optimizer(self.model.parameters(), lr=lr)
-        self.scheduler = torch.optim.lr_scheduler.StepLR(
-            self.opt, 
-            step_size=lr_decay_steps, 
-            gamma=gamma
-        )
-
         ### Set up Tensorboard 
         ### and directories for saving models
 
         if mode == 'training':
+
+            #set the optimizer
+            self.opt = optimizer(self.model.parameters(), lr=lr)
+            self.scheduler = torch.optim.lr_scheduler.StepLR(
+                self.opt, 
+                step_size=lr_decay_steps, 
+                gamma=gamma
+            )
 
             if start_epoch == 0:
                 now = datetime.now()
@@ -75,6 +76,7 @@ class Trainer():
             dir = f'runs/{model_name}/{mode}/{exp_name}'
             self.save_path = f'runs/{model_name}/{mode}/{exp_name}'
 
+        self.tboard_dir = dir
         self.writer = SummaryWriter(dir)
         self.metrics = ['SSIM', 'PSNR', 'SAM', 'SRE']
         self.best_psnr = 0
@@ -140,110 +142,111 @@ class Trainer():
                 save_lfs = (epoch+1)%self.save_lfs_step == 0
                 self.evaluate(epoch, save_lfs)
 
-    def evaluate(self, epoch, save_lfs, save_model=True, save_pV=False):
+    def evaluate(self, epoch, save_lfs, save_model=True, save_pV=False, degradation_process='bicubic', track_metrics=True, test_sets=None):
 
         #move model to device
         self.model.to(self.device)
+
+        if self.mode == 'evaluate':
+            dir = os.path.join(self.tboard_dir, degradation_process)
+            self.writer = SummaryWriter(dir)
+
+        if test_sets is not None:
+            test_loaders = [self.test_loaders[test_set] for test_set in test_sets]
+        else:
+            test_sets = self.test_data_list
+            test_loaders = list(self.test_loaders.values())
         
         #loop over test data
 
-        num_test = len(self.test_loaders)
+        num_test = len(test_loaders)
 
-        ssim = torch.zeros(num_test)
-        psnr = torch.zeros(num_test)
-        sam = torch.zeros(num_test)
-        sre = torch.zeros(num_test)
+        if track_metrics:
 
-        ssim_per_v = torch.zeros((num_test, 5, 5))
-        psnr_per_v = torch.zeros((num_test, 5, 5))
+            ssim = torch.zeros(num_test)
+            psnr = torch.zeros(num_test)
+            sam = torch.zeros(num_test)
+            sre = torch.zeros(num_test)
 
-        for i, test_loader in tqdm(enumerate(self.test_loaders), total=len(self.test_loaders)):
+            ssim_per_v = torch.zeros((num_test, 5, 5))
+            psnr_per_v = torch.zeros((num_test, 5, 5))
 
-            ssim_set = torch.zeros(len(test_loader))
-            psnr_set = torch.zeros(len(test_loader))
-            sam_set = torch.zeros(len(test_loader))
-            sre_set = torch.zeros(len(test_loader))
+        for i, test_loader in tqdm(enumerate(test_loaders), total=num_test):
 
-            ssim_per_v_set = torch.zeros((len(test_loader), 25))
-            psnr_per_v_set = torch.zeros((len(test_loader), 25))
+            if track_metrics:
+
+                ssim_set = torch.zeros(len(test_loader))
+                psnr_set = torch.zeros(len(test_loader))
+                sam_set = torch.zeros(len(test_loader))
+                sre_set = torch.zeros(len(test_loader))
+
+                ssim_per_v_set = torch.zeros((len(test_loader), 25))
+                psnr_per_v_set = torch.zeros((len(test_loader), 25))
             
             for j, LF in enumerate(test_loader):
 
-                LF_input = F.interpolate(LF, scale_factor=0.25, mode='bicubic')
-                LF_target = LF
+                LF_out = self.super_resolve(LF, test_sets[i], j, degradation_process=degradation_process, save_lf=save_lfs, epoch=epoch)
 
-                #Crop LFs into Patches
-                LF_divide_integrate_func = LF_divide_integrate(4, 32, 16)
-                sub_LF_input = LF_divide_integrate_func.LFdivide(LF_input)
+                if track_metrics:
 
-                #SR the Patches
-                sub_LF_out = self.evaluate_step(sub_LF_input)
+                    ### compute metrics
+                    LF_target = LF.squeeze()
 
-                #fuse patches back together
-                sub_LF_out = torch.cat(sub_LF_out, dim=0)
-                LF_out = LF_divide_integrate_func.LFintegrate(sub_LF_out).unsqueeze(0)
-                LF_out = LF_out[:, :, 0:LF_target.size(-2), 0:LF_target.size(-1)].cpu().to(torch.float32).detach()
+                    #PSNR and SSIM
+                    ssim_set[j], psnr_set[j], ssim_per_v_set[j], psnr_per_v_set[j] = compute_psnr_ssim(LF_out, LF_target)
+                    #SAM
+                    sam_set[j] = compute_sam(LF_out, LF_target)
+                    #SRE
+                    sre_set[j] = compute_sre(LF_out, LF_target)
 
-                ### compute metrics
-                LF_out = LF_out.squeeze()
-                LF_target = LF_target.squeeze()
+            if track_metrics:
 
-                #PSNR and SSIM
-                ssim_set[j], psnr_set[j], ssim_per_v_set[j], psnr_per_v_set[j] = compute_psnr_ssim(LF_out, LF_target)
-                #SAM
-                sam_set[j] = compute_sam(LF_out, LF_target)
-                #SRE
-                sre_set[j] = compute_sre(LF_out, LF_target)
+                ssim[i] = ssim_set.mean()
+                psnr[i] = psnr_set.mean()
+                sam[i] = sam_set.mean()
+                sre[i] = sre_set.mean()
 
-                ### save result if save_lfs True
-                if save_lfs:
-                    save_path = os.path.join(self.save_lfs_path, f'epoch_{epoch+1}', self.data_list[i])
-                    os.makedirs(save_path, exist_ok=True)
-                    with h5py.File(save_path+f'/scene_{j+1}.h5', 'w') as hf:
-                        hf.create_dataset('SR', data=denormalize_hsi(LF_out).numpy())
+                ssim_per_v[i] = torch.permute(ssim_per_v_set, (1, 0)).mean(dim=-1).view((5, 5))
+                psnr_per_v[i] = torch.permute(psnr_per_v_set, (1, 0)).mean(dim=-1).view((5, 5))
 
-            ssim[i] = ssim_set.mean()
-            psnr[i] = psnr_set.mean()
-            sam[i] = sam_set.mean()
-            sre[i] = sre_set.mean()
+        if track_metrics:
+            for name, metric in zip(self.metrics, [ssim, psnr, sam, sre]):
 
-            ssim_per_v[i] = torch.permute(ssim_per_v_set, (1, 0)).mean(dim=-1).view((5, 5))
-            psnr_per_v[i] = torch.permute(psnr_per_v_set, (1, 0)).mean(dim=-1).view((5, 5))
+                self.writer.add_scalars(
+                    name, dict(zip(self.data_list, metric)), global_step=epoch+1
+                )
 
-        for name, metric in zip(self.metrics, [ssim, psnr, sam, sre]):
+            if save_pV:
+                for name, metric in zip(['SSIM_pV', 'PSNR_pV'], [ssim_per_v, psnr_per_v]):
+                    path = os.path.join(self.save_path, degradation_process, 'per_view_statistics')
+                    os.makedirs(path, exist_ok=True)
+                    path = os.path.join(path, f'{name}.h5')
+                    with h5py.File(path, 'w') as f:
+                        for idx, data_name in enumerate(test_sets):
+                            f.create_dataset(name=data_name, data=metric[idx])
+
+        if track_metrics:
+
+            print(
+                f'SSIM: {ssim.mean():.3f}; PSNR: {psnr.mean():.3f}; SAM: {sam.mean():.3f}; SRE: {sre.mean():.3f}'
+            )
 
             self.writer.add_scalars(
-                name, dict(zip(self.data_list, metric)), global_step=epoch+1
+                'Avg', {'SSIM': ssim.mean(), 'PSNR': psnr.mean(), 'SAM': sam.mean(), 'SRE': sre.mean()}, global_step=epoch+1
             )
-
-        if save_pV:
-            for name, metric in zip(['SSIM_pV', 'PSNR_pV'], [ssim_per_v, psnr_per_v]):
-                path = os.path.join(self.save_path, 'per_view_statistics')
-                os.makedirs(path, exist_ok=True)
-                path = os.path.join(path, f'{name}.h5')
-                with h5py.File(path, 'w') as f:
-                    for idx, data_name in enumerate(self.data_list):
-                        f.create_dataset(name=data_name, data=metric[idx])
-
-        print(
-            f'SSIM: {ssim.mean():.3f}; PSNR: {psnr.mean():.3f}; SAM: {sam.mean():.3f}; SRE: {sre.mean():.3f}'
-        )
-
-        self.writer.add_scalars(
-            'Avg', {'SSIM': ssim.mean(), 'PSNR': psnr.mean(), 'SAM': sam.mean(), 'SRE': sre.mean()}, global_step=epoch+1
-        )
 
         ### save the model
-        if psnr.mean() > self.best_psnr and save_model:
-            print(
-                f'Saving model - beat previously best PSNR by {psnr.mean() - self.best_psnr:.3f} dB'
-            )
-            self.best_psnr = psnr.mean()
-            model_path = self.save_model_path
-            os.makedirs(model_path, exist_ok=True)
-            torch.save(self.model.state_dict(), model_path + f'/net_epoch_{epoch+1}.pth')
+        if save_model:
+            if psnr.mean() > self.best_psnr:
+                print(
+                    f'Saving model - beat previously best PSNR by {psnr.mean() - self.best_psnr:.3f} dB'
+                )
+                self.best_psnr = psnr.mean()
+                model_path = self.save_model_path
+                os.makedirs(model_path, exist_ok=True)
+                torch.save(self.model.state_dict(), model_path + f'/net_epoch_{epoch+1}.pth')
 
-    def super_resolve(self, LF, index_set, index_scene, degradation_process='bicubic', save_lf=False, scale=4, epoch=0):
+    def super_resolve(self, LF, test_set, index_scene, degradation_process='bicubic', save_lf=False, scale=4, epoch=0):
 
         #move model to device
         self.model.to(self.device)
@@ -272,20 +275,20 @@ class Trainer():
 
         # remove batch dimension
         LF_out = LF_out.squeeze()
-
-        print(LF_out.shape)
         
         ### save result if save_lfs True
         if save_lf:
             
             if self.mode == 'train':
-                save_path = os.path.join(self.save_lfs_path, f'epoch_{epoch+1}', self.data_list[index_set])
+                save_path = os.path.join(self.save_lfs_path, f'epoch_{epoch+1}', test_set)
             else:
-                save_path = os.path.join(self.save_lfs_path, degradation_process, self.data_list[index_set])
+                save_path = os.path.join(self.save_lfs_path, degradation_process, test_set)
 
             os.makedirs(save_path, exist_ok=True)
             with h5py.File(save_path+f'/scene_{index_scene+1}.h5', 'w') as hf:
                 hf.create_dataset('SR', data=denormalize_hsi(LF_out).numpy())
+
+        return LF_out
 
     def train_step(self, x):
         raise NotImplementedError 

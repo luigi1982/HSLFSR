@@ -5,39 +5,49 @@ from matplotlib import pyplot as plt
 import torch
 from torch.nn import functional as F
 
-def get_lfsr_paths(model, exp_name):
+def get_lfsr_paths(model, exp_name, degradation, 
+                   datasets=['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors', 'multi_exposure_rec'],
+                   num_scenes=1
+    ):
     #for each test set get the first scene
 
     scene_paths = []
 
-    path=os.path.join('results', model, 'evaluate', exp_name)
-    epochs=os.listdir(path)
-    nums=[]
-    for epoch in epochs:
-        try:
-            _, num = epoch.split('_')
-            nums.append(int(num))
-        except:
-            pass
-    epoch=max(nums)
-    path=os.path.join(path, 'epoch_'+str(epoch))
+    path=os.path.join('results', model, 'evaluate', exp_name, degradation)
     
-    for test in os.listdir(path):
+    for test in datasets:
         if not 'hold_out' in test:
-            scene = os.path.join(path, test, 'scene_1.h5')
-            scene_paths.append(scene)
+            if num_scenes == 3:
+                scenes = ['scene_6.h5', 'scene_7.h5', 'scene_5.h5']
+                scenes=[os.path.join(path, test, scene) for scene in scenes]
+                scene_paths = scene_paths + scenes
+            elif num_scenes == 1:
+                scenes = ['scene_1.h5']
+                scenes=[os.path.join(path, test, scene) for scene in scenes]
+                scene_paths = scene_paths + scenes
+            else:
+                scenes=os.listdir(os.path.join(path, test))[:num_scenes]
+                scenes=[os.path.join(path, test, scene) for scene in scenes]
+                scene_paths = scene_paths + scenes
 
     return scene_paths
 
-def get_lfhr_paths():
+def get_lfhr_paths(
+        datasets=['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors', 'multi_exposure_rec'],
+        num_scenes=1
+):
     scene_paths = []
     path='../datasets'
-    for test in ['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors', 'multi_exposure_rec']: #for test in os.listdir(path):
-        print(test)
+    for test in datasets: #for test in os.listdir(path):
         test = os.path.join(path, test, 'test_hsi')
-        scene=os.listdir(test)[0]
-        scene=os.path.join(test, scene)
-        scene_paths.append(scene)
+        if num_scenes == 3:
+            scenes = ['scene_3.h5', 'scene_1.h5', 'scene_2.h5']
+            scenes=[os.path.join(test, scene) for scene in scenes]
+            scene_paths = scene_paths + scenes
+        else:
+            scenes=os.listdir(test)[:num_scenes]
+            scenes=[os.path.join(test, scene) for scene in scenes]
+            scene_paths = scene_paths + scenes
 
     return scene_paths
 

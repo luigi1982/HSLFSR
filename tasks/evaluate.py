@@ -39,8 +39,7 @@ trainer = getattr(pkg, cls_name)
 
 #load the train and test data
 train_data_list = ['Lab_day']
-test_data_list = ['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors', 'multi_exposure_rec']
-
+test_data_list = ['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors', 'multi_exposure_rec', 'Texts']
 
 
 if cfg.task == 'diff':
@@ -49,19 +48,21 @@ if cfg.task == 'diff':
     denoise_fn = MODEL_REGISTRY['distg_unet'](32, 32, 32)
     encoder_fn = MODEL_REGISTRY['epit'](32, use_as_encoder=True)
 
-    #load encoder model
-    ENC_PATH='models_/epit/training/dim=32-1114-1821/net_epoch_80.pth'
-    encoder_fn.load_state_dict(torch.load(ENC_PATH, weights_only=True))
+    epoch = max([int(net.split('_')[-1].split('.')[0]) for net in os.listdir(f'models_/{MODEL}/training/{cfg.experiment}')])
+    checkpoint = f'models_/{MODEL}/training/{cfg.experiment}/net_epoch_{epoch}.pth'
+    EXP_NAME = cfg.experiment
 
     #instatiate the trainer class
     trainer = trainer(
         EXP_NAME, MODEL,
-        denoise_fn, encoder_fn, 
+        denoise_fn, encoder_fn,
         train_data_list, test_data_list,
         EPOCHS, DEVICE, BS,
         EVAL_BS, EVAL_STEP, SAVE_LF_STEP,
         lr=LR, lr_decay_steps=LR_DECAY_STEP, gamma=GAMMA,
-        mode='evaluate'
+        start_epoch=epoch,
+        mode='evaluate',
+        checkpoint=checkpoint
     )
     
 else:
@@ -69,11 +70,15 @@ else:
     #load the model
     model = MODEL_REGISTRY[MODEL](cfg.train.model.dim)
 
-    #if continue tranining from a checkpoint
-    epoch = max([int(net.split('_')[-1].split('.')[0]) for net in os.listdir(f'models_/{MODEL}/training/{cfg.experiment}')])
-    checkpoint = f'models_/{MODEL}/training/{cfg.experiment}/net_epoch_{epoch}.pth'
-    model.load_state_dict(torch.load(checkpoint, weights_only=True))
+    #load the specified checkpoint
+    if MODEL != 'bicubic':
+        epoch = max([int(net.split('_')[-1].split('.')[0]) for net in os.listdir(f'models_/{MODEL}/training/{cfg.experiment}')])
+        checkpoint = f'models_/{MODEL}/training/{cfg.experiment}/net_epoch_{epoch}.pth'
+        model.load_state_dict(torch.load(checkpoint, weights_only=True))
+    else:
+        epoch = 0
     EXP_NAME = cfg.experiment
+
 
     #instatiate the trainer class
     trainer = trainer(
@@ -86,5 +91,18 @@ else:
         mode='evaluate'
     )
 
-#start training
-trainer.evaluate(0, True, save_model=False, save_pV=True)
+#evaluate on seven test sets with bicubuc downsampling
+print('Evaluating on bicubically downsampled data')
+trainer.evaluate(0, True, save_model=False, save_pV=True, 
+                 test_sets=['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors', 'multi_exposure_rec']
+                 )
+
+#evaluate on seven test sets with classical degradation scheme
+print('Evaluating on classical degradation scheme')
+trainer.evaluate(0, True, save_model=False, save_pV=True, degradation_process='classical',
+                 test_sets=['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors', 'multi_exposure_rec']
+    )
+
+#evaluate on the Text dataset
+print('Evaluating no degradation')
+trainer.evaluate(0, True, save_model=False, save_pV=True, degradation_process='id', track_metrics=False, test_sets=['Texts'])

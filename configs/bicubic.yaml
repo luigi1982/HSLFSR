@@ -1,0 +1,18 @@
+{
+  "train": {
+    "epochs": 80,
+    "batch_size": 64,
+    "device": "cuda:1",
+    "name": "run1",
+    "optim": {
+      "name": "adam",
+      "lr": 0.0002,
+      "lr_decay_steps": 15, 
+      "gamma": 0.5
+    },
+    "model": {
+      "model": "bicubic",
+      "dim": 32
+    }
+  }
+}

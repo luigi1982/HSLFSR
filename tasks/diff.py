@@ -22,10 +22,15 @@ class DIFFTrainer(Trainer):
             criterion=torch.nn.L1Loss(),
             optimizer=Adam, lr=2e-4, lr_decay_steps=15, gamma=0.5,
             mode='training',
-            cross_val_run=None
+            cross_val_run=None,
+            start_epoch=0,
+            checkpoint=False
         ):
 
         model = GaussianDiffusion(denoise_fn, encoder_fn)
+
+        if checkpoint:
+            model.load_state_dict(torch.load(checkpoint, weights_only=True))
 
         for param in model.encoder_fn.parameters():
             param.requires_grad = False
@@ -38,7 +43,8 @@ class DIFFTrainer(Trainer):
             evaluation_step, save_lfs_step,
             optimizer=optimizer, lr=lr, lr_decay_steps=lr_decay_steps, gamma=gamma,
             mode=mode,
-            cross_val_run=cross_val_run
+            cross_val_run=cross_val_run,
+            start_epoch=start_epoch
         )
 
         self.criterion = criterion

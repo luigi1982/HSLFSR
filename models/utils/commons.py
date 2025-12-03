@@ -78,3 +78,11 @@ class LinearAttention(nn.Module):
             out, "b heads c (h w) -> b (heads c) h w", heads=self.heads, h=h, w=w
         )
         return self.to_out(out)
+    
+
+class BicubicSR(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+
+    def forward(self, x):
+        return F.interpolate(x, scale_factor=4, mode='bicubic')

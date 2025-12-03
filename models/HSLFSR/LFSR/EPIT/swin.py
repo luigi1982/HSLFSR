@@ -174,3 +174,12 @@ class EPIT(nn.Module):
         else:
             x_up = x_up.view((-1, 25, 128, 128))
             return x_up
+        
+
+class EPIT_Swin_v1(EPIT):
+    def __init__(self, channels, ang_res=5, version='v1', use_as_encoder=False):
+        super().__init__(channels, ang_res, version='v1', use_as_encoder=False)
+
+class EPIT_Swin_v2(EPIT):
+    def __init__(self, channels, ang_res=5, version='v2', use_as_encoder=False):
+        super().__init__(channels, ang_res, version='v2', use_as_encoder=False)

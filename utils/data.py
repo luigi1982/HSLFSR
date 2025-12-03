@@ -45,11 +45,11 @@ def load_data(train_list, test_list, batch_size, train_data, test_data, transfor
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     #Load Test Data
-    test_loaders = []
+    test_loaders = {}
     for data in test_list:
         dataset = test_data([data], transform=transform)
         test_loader = DataLoader(dataset, batch_size=1, shuffle=False)
-        test_loaders.append(test_loader)
+        test_loaders[data] = test_loader
 
     return train_loader, test_loaders
 

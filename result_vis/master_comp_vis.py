@@ -11,26 +11,35 @@ from get_results import parse_all
 from gen_latex import wrap_in_latex, latex_figure
 from get_lightfields import get_lfhr_paths, get_lfsr_paths
 from master_qual_plots import create_single_qual_plot
+from get_model_stats import get_model_stats
 
 
-def get_stats(models, exps):
+def get_stats(models, exps, degradation):
 
     ### load all the statistics for the specified experiments
 
     dic = {}
+    stats = {}
     for model, exp in zip(models, exps):
-        path = os.path.join('runs', model, 'evaluate', exp)
+        path = os.path.join('runs', model, 'evaluate', exp, degradation)
         dfs = parse_all(path)
         dic[model] = dfs
 
-    return dic
+        stats[model] = {}
+        num_params, num_flops = get_model_stats(model)
+        num_params /= 1e6
+        num_flops /= 1e9
+        stats[model]['prms'] = num_params
+        stats[model]['flops'] = num_flops
 
-def get_per_view_stats(models, exps):
+    return dic, stats
+
+def get_per_view_stats(models, exps, degradation):
 
     psnr_pv = {}
     ssim_pv = {}
     for model, exp in zip(models, exps):
-        path = os.path.join('runs', model, 'evaluate', exp, 'per_view_statistics')
+        path = os.path.join('runs', model, 'evaluate', exp, degradation, 'per_view_statistics')
         psnr_pv[model] = {}
         ssim_pv[model] = {}
         
@@ -46,25 +55,48 @@ def get_per_view_stats(models, exps):
 
 
 def check_evaluation(model, exp):
-    if not os.path.isdir(os.path.join('runs', model, 'evaluate', exp)):
-        script_path = os.path.join(os.path.dirname(__file__), '..', 'bash', 'evaluate_lfsr.sh')
-        script_path = os.path.abspath(script_path)
-        subprocess.call([script_path, model, exp])
 
-def create_metrics_table(dicts):
+    if not os.path.isdir(os.path.join('runs', model, 'evaluate', exp, 'bicubic')):
+
+        script_path = os.path.join(os.path.dirname(__file__), '..', 'bash', 'evaluate.sh')
+        script_path = os.path.abspath(script_path)
+
+        task = 'diff' if model == 'distg_unet' else 'lfsr'
+
+        subprocess.call([script_path, task, model, exp])
+
+
+def create_metrics_table(dicts, dataset, stats=None):
 
     #create a table with a column for each model in dicts
     #and a column for every Metric, i.e. PSNR, SSIM, SAM and SRE
 
-    latex = r'''
-    \begin{center}
-        \begin{tabular}{c | c c c c}
-            & PSNR & SSIM & SAM & SRE \\
+    if dataset == 'Avg':
+        psnr = 'Avg PSNR'
+        ssim = 'Avg SSIM'
+        sam = 'Avg SAM'
+        sre = 'Avg SRE'
+    else:
+        psnr = f'PSNR {dataset}'
+        ssim = f'SSIM {dataset}'
+        sam = f'SAM {dataset}'
+        sre = f'SRE {dataset}'
+
+    stats_header_col = ' || c c' if stats is not None else ''
+    stats_header_info = '& \#Prm. & \#FlOps' if stats is not None else '' 
+
+    latex = rf'''
+    \begin{{center}}
+        \begin{{tabular}}{{c | c c c c{stats_header_col}}}
+            & PSNR & SSIM & SAM & SRE {stats_header_info}\\
             \hline'''
         
     for i, model in enumerate(dicts.keys()):
         latex += rf'''
-            {model} & {dicts[model]['Avg PSNR']['value'][0]:.2f} & {dicts[model]['Avg SSIM']['value'][0]:.4f} & {dicts[model]['Avg SAM']['value'][0]:.4f} & {dicts[model]['Avg SRE']['value'][0]:.2f}'''
+            {model} & {dicts[model][psnr]['value'][0]:.2f} & {dicts[model][ssim]['value'][0]:.4f} & {dicts[model][sam]['value'][0]:.4f} & {dicts[model][sre]['value'][0]:.2f}'''
+        
+        if stats is not None:
+            latex += rf'''& {stats[model]['prms']:.2f} & {stats[model]['flops']:.2f}'''
         
         if i < len(dicts.keys()) - 1:
             latex += '\\\\'
@@ -137,20 +169,34 @@ def per_view_statistics_dataset(stats, metric, dataset):
     return path
 
 
-def qualitative_results(models, exps):
+def qualitative_results(models, exps, degradation, datasets=None, num_scenes=1, custom_box_coords=None):
 
-    hr_paths = sorted(get_lfhr_paths())
+    if datasets is None:
+        datasets=['Lab_day', 'Lab_night', 'Indoors_day', 'Indoors_night', 'Showroom', 'Outdoors', 'multi_exposure_rec']
+
+    hr_paths = sorted(get_lfhr_paths(datasets=datasets, num_scenes=num_scenes))
 
     sr_paths = []
 
     for model, exp in zip(models, exps):
-        sr_paths.append(sorted(get_lfsr_paths(model, exp)))
+        sr_paths.append(sorted(get_lfsr_paths(model, exp, degradation, datasets=datasets, num_scenes=num_scenes)))
 
     latex = ''
 
-    for i in range(7):
+    if num_scenes == 3:
+        print(hr_paths)
 
-        path = create_single_qual_plot(hr_paths[i], [paths[i] for paths in sr_paths], models, i)
+    print('length HR paths: ', len(hr_paths))
+    print('length SR paths: ', len(sr_paths[0]))
+
+    for i in range(len(sr_paths[0])):
+
+        if custom_box_coords is not None:
+            box = custom_box_coords[i]
+        else:
+            box = None
+
+        path = create_single_qual_plot(hr_paths[i], [paths[i] for paths in sr_paths], models, i, degradation, custom_box_coords=box)
         latex += latex_figure('caption', path)
         latex += '\n'
     
@@ -158,18 +204,56 @@ def qualitative_results(models, exps):
 
 
 def main():
-    models = ['epit', 'det', 'f3dun']
-    exps = ["real_data-run1-1031-2301", "real_data-run1-1106-1620", "real_data-run1-1107-0158"]
+    models = ['bicubic', 'epit', 'det', 'f3dun', 'distg_unet']
+    exps = ["none", "new_arrangement-1128-1308", "real_data-run1-1106-1620", "real_data-run1-1107-0158", "new_arrangement-1128-1512"]
 
     for model, exp in zip(models, exps):
         check_evaluation(model, exp)
 
-    dicts = get_stats(models, exps)
-    psnr_pv, ssim_pv = get_per_view_stats(models, exps)
+    ### bicubic downsampling
 
-    latex = create_metrics_table(dicts)
+    #get the stats
+    dicts, stats = get_stats(models, exps, 'bicubic')
+    psnr_pv, ssim_pv = get_per_view_stats(models, exps, 'bicubic')
+
+    #quantitative
+    latex = create_metrics_table(dicts, dataset='Avg', stats=stats)
+    latex += create_metrics_table(dicts, dataset='Indoors night')
+    latex += create_metrics_table(dicts, dataset='multi exposure rec')
     latex += per_view_statistics(psnr_pv, ssim_pv)
-    latex += qualitative_results(models, exps)
+
+    #qualitative
+    latex += qualitative_results(models, exps, 'bicubic')
+
+    latex += rf'''
+        \newpage
+        \subsubsection{{Further Degradation}}
+    '''
+
+    ### classical degradation
+
+    #get the stats
+    dicts, stats = get_stats(models, exps, 'classical')
+    psnr_pv, ssim_pv = get_per_view_stats(models, exps, 'bicubic')
+
+    #quantitative
+    latex += create_metrics_table(dicts, dataset='Avg')
+    latex += create_metrics_table(dicts, dataset='Indoors night')
+    latex += create_metrics_table(dicts, dataset='multi exposure rec')
+    latex += per_view_statistics(psnr_pv, ssim_pv)
+
+    #qualitative
+    latex += qualitative_results(models, exps, 'classical')
+
+    latex += rf'''
+        \newpage
+        \subsubsection{{Direct Upsampling}}
+    '''
+
+    ### no degradation
+    latex += qualitative_results(models, exps, 'id', datasets=['Texts'], num_scenes=3,
+                                 custom_box_coords=[(240, 280, 100, 100), (100, 10, 120, 120), (360, 0, 50, 50)])
+
     latex = wrap_in_latex(latex)
 
     with open(f'result_vis/master/v1.tex', 'w') as fout:

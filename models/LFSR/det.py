@@ -143,6 +143,7 @@ class AttentionFusion(nn.Module):
         x = einsum(a, x, 'b l h, b l h d -> b l d')
         return x
     
+    
 class AngCoder(nn.Module):
     def __init__(self, dim, num_heads, ms=[1, 2, 4]):
         super().__init__()
