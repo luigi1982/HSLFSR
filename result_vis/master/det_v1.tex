@@ -1,0 +1,103 @@
+\documentclass{article}
+\usepackage{graphicx} 
+\begin{document}
+
+
+    \begin{center}
+        \begin{tabular}{c | c c c c || c c c}
+            & PSNR & SSIM & SAM & SRE & \#Prm. & \#FlOps & time forward pass in ms\\
+            \hline
+            det & 40.76 & 0.9601 & 0.0441 & 5.54& 1.41 & 44.19 & 755.07\\
+            det_swin_angular & 40.64 & 0.9594 & 0.0447 & 5.64& 2.09 & 44.19 & 21.25\\
+            det_swin_angular_cascaded & 40.34 & 0.9563 & 0.0464 & 5.94& 2.48 & 42.41 & 22.16\\
+            det_swin_spatial & 40.52 & 0.9581 & 0.0453 & 5.75& 1.41 & 44.19 & 20.68\\
+            det_swin_angular_spatial & 40.52 & 0.9581 & 0.0453 & 5.75& 1.41 & 44.19 & 20.70
+        \end{tabular}
+    \end{center}
+    
+        \begin{table}[h]
+        \centering
+        \begin{tabular}{c || c c c c || c c c c}
+            & \multicolumn{4}{c||}{Indoors night} 
+            & \multicolumn{4}{c}{Multi-exposure} \\
+            \cline{2-9}
+            & PSNR & SSIM & SAM & SRE 
+            & PSNR & SSIM & SAM & SRE \\
+            \hline
+        det & 52.45 & 0.9902 & 0.0589 & 1.61& 32.30 & 0.9290 & 0.0465 & 10.11\\
+det_swin_angular & 52.35 & 0.9900 & 0.0597 & 1.63& 32.24 & 0.9300 & 0.0464 & 10.16\\
+det_swin_angular_cascaded & 52.16 & 0.9898 & 0.0605 & 1.70& 31.64 & 0.9190 & 0.0506 & 10.91\\
+det_swin_spatial & 52.35 & 0.9900 & 0.0596 & 1.64& 31.94 & 0.9237 & 0.0484 & 10.58\\
+det_swin_angular_spatial & 52.35 & 0.9900 & 0.0596 & 1.64& 31.94 & 0.9237 & 0.0484 & 10.58
+        \end{tabular}
+        \caption{
+            Average PSNR, SSIM, SAM and SRE over Indoors night and Multi-exposure recordings individually.
+        }
+        \label{tab:Indoors_night-multi_exposure_rec-vanilla_bc_deg}
+    \end{table}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{result_vis/master_plots/Indoors_night-bicubic-psnr_per_view.pdf}
+    \caption{Average PSNR per view over the Indoors night dataset}
+    \label{fig:Average PSNR per view over the Indoors night dataset}
+\end{figure}
+ 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{result_vis/master_plots/multi_exposure_rec-bicubic-psnr_per_view.pdf}
+    \caption{Average PSNR per view over the Multi Exposure Rec dataset}
+    \label{fig:Average PSNR per view over the Multi Exposure Rec dataset}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-0.pdf}
+    \caption{caption}
+    \label{fig:caption}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-1.pdf}
+    \caption{caption}
+    \label{fig:caption}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-2.pdf}
+    \caption{caption}
+    \label{fig:caption}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-3.pdf}
+    \caption{caption}
+    \label{fig:caption}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-4.pdf}
+    \caption{caption}
+    \label{fig:caption}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-5.pdf}
+    \caption{caption}
+    \label{fig:caption}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-6.pdf}
+    \caption{caption}
+    \label{fig:caption}
+\end{figure}
+
+        \newpage
+        \subsubsection{Further Degradation}
+    \end{document}

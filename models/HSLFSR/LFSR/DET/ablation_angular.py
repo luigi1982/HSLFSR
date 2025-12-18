@@ -9,7 +9,7 @@ class CascadedAngTrans(nn.Module):
         super().__init__()
         self.m = m
         self.transs = nn.ModuleList(
-            [AngTrans(dim, num_heads, m) for _ in range(3)]
+            [AngTrans(dim, num_heads, m) for _ in range(2)]
         )
 
     def forward(self, x):

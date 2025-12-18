@@ -59,6 +59,8 @@ class BasicTrans(nn.Module):
         Where L is sequence length, B batch size, C channel dim
         '''
 
+        #x = rearrange(x, 'b c (u v) h w -> (v w) (b u h) c', u=5, v=5)
+
         buffer = self.in_(x)
         buffer = self.norm(buffer)
         buffer = self.mhsa(
@@ -165,3 +167,13 @@ class EPIT(nn.Module):
             x_up = x_up.view((-1, 25, 128, 128))
             return x_up
         
+
+class EPIT_short(EPIT):
+    def __init__(self, channels, ang_res=5, use_as_encoder=False, num_blocks=3):
+        super().__init__(channels, ang_res, use_as_encoder)
+
+        self.EPI_features = nn.Sequential(
+            *[AltFilter(channels) for _ in range(num_blocks)]
+        )
+
+

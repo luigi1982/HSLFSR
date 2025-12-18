@@ -63,7 +63,7 @@ if cfg.task == 'diff':
     encoder_fn = MODEL_REGISTRY['epit'](32, use_as_encoder=True)
 
     #load encoder model
-    ENC_PATH='models_/epit/training/dim=32-1114-1821/net_epoch_80.pth'
+    ENC_PATH='models_/epit/training/new_arrangement-1204-1723/net_epoch_77.pth'
     encoder_fn.load_state_dict(torch.load(ENC_PATH, weights_only=True))
 
     #instatiate the trainer class

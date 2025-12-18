@@ -136,6 +136,32 @@ class DISTG_UNET(nn.Module):
         x = rearrange(x, 'b c (h u) (w v) -> (b c) (u v) h w', u=5, v=5)
 
         return x
+    
+
+class DISTG_UNET_get_stats(DISTG_UNET):
+    def __init__(self, dim, time_emb_dim, cond_dim, scale_factor=4):
+        super().__init__(dim, time_emb_dim, cond_dim, scale_factor)
+
+    def forward(self, cond):
+
+        ### x is expected to be B x 2C x UV x H x W
+        x = torch.randn((1, 25, 128, 128)).to('cuda:2')
+        t = torch.tensor([1]).to('cuda:2')
+
+        x = rearrange(x, 'b (u v) h w -> b (h u) (w v)', u=5, v=5)
+        x = x.unsqueeze(1)
+        cond = rearrange(cond, 'b c (u v) h w -> b c (h u) (w v)', u=5, v=5)
+        
+        cond = self.cond_proj(cond)
+        x = self.init_conv(x) + cond
+        x = self.unet(x, t)
+        x = self.out_conv(x)
+
+        #rearrange tiled MacPis to stack of SAIs
+        x = rearrange(x, 'b c (h u) (w v) -> (b c) (u v) h w', u=5, v=5)
+
+        return x
+
         
 
 

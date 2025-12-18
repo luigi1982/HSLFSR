@@ -1,21 +1,18 @@
 {
   "train": {
     "epochs": 80,
-    "batch_size": 16,
-    "device": "cuda:0",
+    "batch_size": 64,
+    "device": "cuda:2",
     "name": "new_arrangement",
     "optim": {
       "name": "adam",
       "lr": 0.0002,
-      "lr_decay_steps": 35, 
+      "lr_decay_steps": 15, 
       "gamma": 0.5
     },
     "model": {
-      "model": "distg_unet",
+      "model": "distg_unet_reg",
       "dim": 32
-    },
-    "evaluation": {
-      "eval_step": 5
     }
   }
 }

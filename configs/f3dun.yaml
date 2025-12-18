@@ -2,7 +2,7 @@
   "train": {
     "epochs": 80,
     "batch_size": 64,
-    "device": "cuda:1",
+    "device": "cuda:2",
     "name": "new_arrangement",
     "optim": {
       "name": "adam",

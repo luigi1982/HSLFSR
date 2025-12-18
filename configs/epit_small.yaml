@@ -3,19 +3,16 @@
     "epochs": 80,
     "batch_size": 16,
     "device": "cuda:0",
-    "name": "new_arrangement",
+    "name": "5-Blocks",
     "optim": {
       "name": "adam",
       "lr": 0.0002,
-      "lr_decay_steps": 35, 
+      "lr_decay_steps": 15, 
       "gamma": 0.5
     },
     "model": {
-      "model": "distg_unet",
+      "model": "epit",
       "dim": 32
-    },
-    "evaluation": {
-      "eval_step": 5
     }
   }
 }

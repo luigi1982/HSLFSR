@@ -139,7 +139,7 @@ class Trainer():
             )
 
             if (epoch+1)%self.evaluation_step == 0:
-                save_lfs = (epoch+1)%self.save_lfs_step == 0
+                save_lfs = False #(epoch+1)%self.save_lfs_step == 0
                 self.evaluate(epoch, save_lfs)
 
     def evaluate(self, epoch, save_lfs, save_model=True, save_pV=False, degradation_process='bicubic', track_metrics=True, test_sets=None):

@@ -10,6 +10,7 @@ def parse_tensorboard(path, scalar):
         size_guidance={event_accumulator.SCALARS: 0},
     )
     _absorb_print = ea.Reload()
+
     return pd.DataFrame(ea.Scalars(scalar))
 
 def parse_images(path, prefix):
@@ -42,6 +43,7 @@ def parse_all(root):
             except:
                 pass
         else:
+            print(path)
             try:
                 df=parse_tensorboard(path, 'Train Loss')
                 dfs['Train Loss'] = df

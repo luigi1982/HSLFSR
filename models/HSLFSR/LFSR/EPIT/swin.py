@@ -23,10 +23,16 @@ class AltFilter(nn.Module):
         x = self.epi_trans(x, shifted=True)
         return x
     
+    def no_cs(self, x):
+        return self.epi_trans(x)
+    
     def v(self, x):
         if self.version == 'v1':
             return self.v1(x)
-        return self.v2(x)
+        elif self.version == 'v2':
+            return self.v2(x)
+        else:
+            return self.no_cs(x)
 
     def forward(self, x):
 
@@ -148,7 +154,7 @@ class EPIT(nn.Module):
         )
 
         self.EPI_features = nn.Sequential(
-            *[AltFilter(channels, shifted=(i%2==1), version=version) for i in range(3)]
+            *[AltFilter(channels, shifted=(i%2==1), version=version) for i in range(5)]
         )
 
         self.upsampling = nn.Sequential(
@@ -183,3 +189,7 @@ class EPIT_Swin_v1(EPIT):
 class EPIT_Swin_v2(EPIT):
     def __init__(self, channels, ang_res=5, version='v2', use_as_encoder=False):
         super().__init__(channels, ang_res, version='v2', use_as_encoder=False)
+
+class EPIT_win(EPIT):
+    def __init__(self, channels, ang_res=5, use_as_encoder=False):
+        super().__init__(channels, ang_res, version='no_cs', use_as_encoder=use_as_encoder)

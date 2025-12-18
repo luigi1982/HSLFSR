@@ -1,0 +1,128 @@
+
+    \begin{center}
+        \begin{tabular}{c | c c c c || c c c}
+            & PSNR & SSIM & SAM & SRE & \#Prm. & \#FlOps & time forward pass\\
+            \hline
+            distg_unet & 35.56 & 0.9090 & 0.0755 & 7.41& 2.12 & 20463.04 & 4324.22\\
+            epit & 39.77 & 0.9522 & 0.0502 & 6.30& 1.47 & 71.15 & 8.97\\
+            distg & 33.84 & 0.8521 & 0.0907 & 9.30& 2.69 & 52.16 & 7.17\\
+            distg_unet_reg & 38.60 & 0.9442 & 0.0578 & 7.19& 6.76 & 53.51 & 13.09
+        \end{tabular}
+    \end{center}
+    
+        \begin{table}[h]
+        \centering
+        \begin{tabular}{c || c c c c || c c c c}
+            & \multicolumn{4}{c||}{Indoors night} 
+            & \multicolumn{4}{c}{Multi-exposure} \\
+            \cline{2-9}
+            & PSNR & SSIM & SAM & SRE 
+            & PSNR & SSIM & SAM & SRE \\
+            \hline
+        distg_unet & 40.10 & 0.9279 & 0.1678 & 4.01& 31.86 & 0.9021 & 0.0486 & 10.07\\
+epit & 51.41 & 0.9877 & 0.0671 & 2.03& 32.55 & 0.9388 & 0.0430 & 9.51\\
+distg & 39.76 & 0.9237 & 0.1810 & 4.32& 29.88 & 0.8042 & 0.0614 & 12.46\\
+distg_unet_reg & 49.80 & 0.9849 & 0.0782 & 2.54& 31.92 & 0.9309 & 0.0467 & 10.19
+        \end{tabular}
+        \caption{
+            Average PSNR, SSIM, SAM and SRE over Indoors night and Multi-exposure recordings individually.
+        }
+        \label{tab:Indoors_night-multi_exposure_rec-vanilla_bc_deg}
+    \end{table}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{result_vis/master_plots/Indoors_night-bicubic-psnr_per_view.pdf}
+    \caption{Average PSNR per view over the Indoors night dataset}
+    \label{fig:Average PSNR per view over the Indoors night dataset}
+\end{figure}
+ 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{result_vis/master_plots/multi_exposure_rec-bicubic-psnr_per_view.pdf}
+    \caption{Average PSNR per view over the Multi Exposure Rec dataset}
+    \label{fig:Average PSNR per view over the Multi Exposure Rec dataset}
+\end{figure}\begin{figure}[htbp]
+    \centering
+    % Row for figures 1 and 2
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{result_vis/master_plots/train_loss_vs_psnr-Distg UNet.pdf}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{result_vis/master_plots/train_loss_vs_psnr-EPIT rcd.pdf}
+    \end{minipage}
+
+    \vspace{0.5em}
+
+    % Row for figures 3 and 4
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{result_vis/master_plots/train_loss_vs_psnr-Distg.pdf}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{result_vis/master_plots/train_loss_vs_psnr-Distg UNet reg.pdf}
+    \end{minipage}
+
+    \vspace{0.5em}
+
+    \caption{Overall caption}
+    \label{fig:multi}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+        \begin{subfigure}{0.9\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-0.pdf}
+                \caption{Qualitative results for dataset Lab day}
+            \end{subfigure}\par\medskip
+        
+
+        \begin{subfigure}{0.9\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-1.pdf}
+                \caption{Qualitative results for dataset Lab night}
+            \end{subfigure}\par\medskip
+        
+
+        \begin{subfigure}{0.9\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-2.pdf}
+                \caption{Qualitative results for dataset Indoors day}
+            \end{subfigure}\par\medskip
+        
+
+        \begin{subfigure}{0.9\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-3.pdf}
+                \caption{Qualitative results for dataset Indoors night}
+            \end{subfigure}\par\medskip
+        
+
+        \begin{subfigure}{0.9\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-4.pdf}
+                \caption{Qualitative results for dataset Showroom}
+            \end{subfigure}\par\medskip
+        
+
+        \begin{subfigure}{0.9\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-5.pdf}
+                \caption{Qualitative results for dataset Outdoors}
+            \end{subfigure}\par\medskip
+        
+
+        \begin{subfigure}{0.9\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{result_vis/master_plots/qualitative_plot-bicubic-6.pdf}
+                \caption{Qualitative results for dataset multi exposure rec}
+            \end{subfigure}\par\medskip
+        
+\end{figure}
+    

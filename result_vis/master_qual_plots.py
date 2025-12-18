@@ -6,7 +6,7 @@ import torch
 from torch.nn import functional as F
 
 
-def create_single_qual_plot(gt_path, sr_paths, models, number, degradation, custom_box_coords=None):
+def create_single_qual_plot(gt_path, sr_paths, models, number, degradation, model_names, custom_box_coords=None):
 
     with h5py.File(gt_path, 'r') as f:
         try:
@@ -20,8 +20,6 @@ def create_single_qual_plot(gt_path, sr_paths, models, number, degradation, cust
         with h5py.File(path, 'r') as f:
             sr = np.array(f['SR'])
             srs.append(sr)
-
-    print(gt.shape)
 
     gt = gt.reshape((5, 5, 410, 410))
     gt[1::2] = gt[1::2, ::-1]
@@ -39,7 +37,7 @@ def create_single_qual_plot(gt_path, sr_paths, models, number, degradation, cust
     ax_main.axis("off")
 
     if custom_box_coords is None:
-        crop_x, crop_y, crop_w, crop_h = 100, 100, 120, 120
+        crop_x, crop_y, crop_w, crop_h = 100, 100, 80, 80
     else:
         crop_x, crop_y, crop_w, crop_h = custom_box_coords
 
@@ -50,7 +48,7 @@ def create_single_qual_plot(gt_path, sr_paths, models, number, degradation, cust
     ))
 
     # --- CROP PATCHES ---------------------------------------------------
-    for i, (sr, name) in enumerate(zip([gt] + srs,  ['Ground Truth'] + models)):
+    for i, (sr, name) in enumerate(zip([gt] + srs,  ['Ground Truth'] + model_names)):
 
         mult = 4 if degradation == 'id' and i>0 else 1
 

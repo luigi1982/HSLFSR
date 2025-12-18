@@ -26,9 +26,10 @@ from .SISR.swinir import SwinIR
 #EPIT
 from .HSLFSR.LFSR.EPIT.extra_token import EPIT as EPIT_extra_token
 from .HSLFSR.LFSR.EPIT.spectral_branch import EPIT as EPIT_spectral_branch
-from .HSLFSR.LFSR.EPIT.swin import EPIT_Swin_v1, EPIT_Swin_v2
+from .HSLFSR.LFSR.EPIT.swin import EPIT_Swin_v1, EPIT_Swin_v2, EPIT_win
 from .HSLFSR.LFSR.EPIT.spectral_attention import EPIT as EPIT_spectral_attention
 from .HSLFSR.LFSR.EPIT.hfa import EPIT as EPIT_hfa
+from .LFSR.epit import EPIT_short
 
 #DET
 from .HSLFSR.LFSR.DET.ablation_angular import DET as DET_ablation_angular
@@ -39,6 +40,8 @@ from .HSLFSR.LFSR.DET.swin_angular_spatial import DET as DET_swin_angular_spatia
 
 #DISTG UNET
 from .HSLFSR.LFSR.UNET.f3dun import F3DUN_UNET
+from .LFSR.distg_unet import DISTG_UNET_get_stats
+from .LFSR.distg_unet_regression import DISTG_UNET_regression
 
 #DRCAN
 from .HSLFSR.SISR.DRCAN.drcan_concat import DRCAN_concat
@@ -72,6 +75,8 @@ MODEL_REGISTRY = {
     "epit_spectral_branch": EPIT_spectral_branch,
     "epit_spectral_attention": EPIT_spectral_attention,
     "epit_hfa": EPIT_hfa,
+    "epit_win": EPIT_win,
+    "epit_short": EPIT_short,
 
     #DET
     "det_ablation_angular": DET_ablation_angular,
@@ -82,6 +87,8 @@ MODEL_REGISTRY = {
 
     #DISTG UNET
     "unet_f3dun": F3DUN_UNET,
+    "distg_unet_get_stats": DISTG_UNET_get_stats,
+    "distg_unet_reg": DISTG_UNET_regression,
 
     #DRCAN
     "drcan_concat": DRCAN_concat,

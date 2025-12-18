@@ -115,7 +115,7 @@ class GaussianDiffusion(nn.Module):
                     + torch.sqrt(beta_t) * z
 
             x = x.view((-1, 1, u, 128, v, 128)).contiguous().permute(0,1,2,4,3,5).contiguous().view((-1,1,u*v,128,128))
-            return img_lr_up + x
+            return img_lr_up + x/2.0
 
     def img2res(self, x, img_lr_up, clip_input=True, res_rescale=2.0):
         x = (x - img_lr_up) * res_rescale

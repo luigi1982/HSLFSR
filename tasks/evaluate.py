@@ -12,16 +12,16 @@ from config import TrainConfig, make_serializable
 
 parser = ArgumentParser(description="Training script with config files")
 parser.add_argument("--task", default='lfsr')
+parser.add_argument("--model", default=None)
 parser.add_argument("--config", action=ActionConfigFile)
 parser.add_argument("--experiment", default=False)
-parser.add_argument("--modification", default=None)
 parser.add_class_arguments(TrainConfig, nested_key="train")
 cfg = parser.parse_args()
 
 EPOCHS=cfg.train.epochs
 BS=cfg.train.batch_size
 DEVICE=cfg.train.device
-MODEL=cfg.modification if cfg.modification else cfg.train.model.model
+MODEL=cfg.model
 EXP_NAME = cfg.train.name
 EVAL_BS=cfg.train.evaluation.batch_size
 EVAL_STEP=cfg.train.evaluation.eval_step
@@ -68,6 +68,7 @@ if cfg.task == 'diff':
 else:
 
     #load the model
+    print(cfg.train.model.dim)
     model = MODEL_REGISTRY[MODEL](cfg.train.model.dim)
 
     #load the specified checkpoint

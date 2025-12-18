@@ -18,7 +18,7 @@ def get_lfsr_paths(model, exp_name, degradation,
     for test in datasets:
         if not 'hold_out' in test:
             if num_scenes == 3:
-                scenes = ['scene_6.h5', 'scene_7.h5', 'scene_5.h5']
+                scenes = ['scene_9.h5', 'scene_8.h5', 'scene_1.h5']
                 scenes=[os.path.join(path, test, scene) for scene in scenes]
                 scene_paths = scene_paths + scenes
             elif num_scenes == 1:
@@ -41,7 +41,7 @@ def get_lfhr_paths(
     for test in datasets: #for test in os.listdir(path):
         test = os.path.join(path, test, 'test_hsi')
         if num_scenes == 3:
-            scenes = ['scene_3.h5', 'scene_1.h5', 'scene_2.h5']
+            scenes = ['scene_0.h5', 'scene_2.h5', 'scene_3.h5']
             scenes=[os.path.join(test, scene) for scene in scenes]
             scene_paths = scene_paths + scenes
         else:
