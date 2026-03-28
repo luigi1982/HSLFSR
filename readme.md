@@ -55,3 +55,11 @@ Two command line arguments need to be provided
 2. specify the experiment
 
 # Results
+
+![alt text](https://github.com/luigi1982/HSLFSR/blob/showcase/images/results_vanilla.png)
+
+![alt text](https://github.com/luigi1982/HSLFSR/blob/showcase/images/results_vanilla_disected.png)
+
+![alt text](https://github.com/luigi1982/HSLFSR/blob/showcase/images/qual_result.png)
+
+![alt text](https://github.com/luigi1982/HSLFSR/blob/showcase/images/changes.png)
