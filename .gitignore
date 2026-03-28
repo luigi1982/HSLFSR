@@ -13,7 +13,6 @@ result_vis/plots/
 data/
 play.py
 
-*.png
 *.aux
 *.log
 *.toc
