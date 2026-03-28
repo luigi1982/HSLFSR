@@ -41,7 +41,7 @@ applying them to Hyper Spectral Light Field Super Resolution (HSLFSR)
 For training run the **train.py** script in the tasks folder.
 Two command line argumnets need to be provided
 
-1. --task, specify the super resolution method, possibler values are 'diff', 'lfsr', 'sisr', to train HSISR or SSR model choose 'lfsr'
+1. --task, specify the super resolution method, possibler values are 'diff', 'lfsr', 'sisr', to train HSISR or SSR models choose 'lfsr'
 2. --config, provide a config file specifying archiotecture and training parameters, examples can be found in the configs directory
 
 # Evaluation
@@ -65,8 +65,7 @@ In the right part of the table we also list the number of parameters, number of 
 ![alt text](https://github.com/luigi1982/HSLFSR/blob/showcase/images/results_vanilla.png)
 
 A problem we encountered is that in scenes lit by artificial lighting,
-the channels capturing the wavelengths towards the extremes and outside of the visable spectrum,
-have a very low signal and turn out very dark.
+the channels capturing the wavelengths towards the extremes and outside of the visable spectrum have low signal and turn out dark.
 
 These inflate results.
 We capture a set of images with multiple exposure times,
@@ -90,6 +89,6 @@ short for reduced block number. Lastly, we compare to that the performance of ou
 architecture, integrating the shifted window mechanism into the EPIT model. It is denoted by
 EPIT SWin. In order to ablate, wether the shift leads to improvement, we also train a model
 for which only windowed attention is employed, but the cyclic shift is omitted. The model is
-denoted by EPIT Win
+denoted by EPIT Win.
 
 ![alt text](https://github.com/luigi1982/HSLFSR/blob/showcase/images/changes.png)
