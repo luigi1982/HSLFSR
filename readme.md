@@ -10,6 +10,8 @@ To address this limitation, research in light-field super-resolution (LFSR) leve
 multi-view information, with deep learning methods achieving state-of-the-art performance. 
 We investigated whether approaches from LFSR, as well as hyperspectral image superresolution (HSISR) can be effectively adapted to the task of hyperspectral light-field superresolution (HSLFSR).
 
+![alt text](https://github.com/luigi1982/HSLFSR/blob/showcase/images/example.png)
+
 # Models
 
 This Repository contains multiple Models and Training procedures for Single Image Super Resolution (SISR),
@@ -56,10 +58,38 @@ Two command line arguments need to be provided
 
 # Results
 
+In the following table we display the results for Bicubic interpolation, EPIT, F3DUN and Distg UNet.
+We use the four metrics Peak Signal to Noise Ratio (PSNR), Structural Similarity Index (SSIM), Spectral Angular Map (SAM) and Spectral Relatic Error (SRE).
+In the right part of the table we also list the number of parameters, number of floating point operations and time required for the forward pass in ms.
+
 ![alt text](https://github.com/luigi1982/HSLFSR/blob/showcase/images/results_vanilla.png)
+
+A problem we encountered is that in scenes lit by artificial lighting,
+the channels capturing the wavelengths towards the extremes and outside of the visable spectrum,
+have a very low signal and turn out very dark.
+
+These inflate results.
+We capture a set of images with multiple exposure times,
+to obtain more uniform signal strengths across all channels.
+
+The top plot showcases PSNR results pre channel for an images recorded with a single exposure time,
+bottom plot for multiple different exposures. 
+
 
 ![alt text](https://github.com/luigi1982/HSLFSR/blob/showcase/images/results_vanilla_disected.png)
 
+Qualitative results.
+
 ![alt text](https://github.com/luigi1982/HSLFSR/blob/showcase/images/qual_result.png)
+
+We repeat the first experiment for multiple modifications of the EPIT architecture. We assess
+four options to decrease computational load. First, we simply half the channel dimension from
+64 to 32, we denote the model by EPIT rcd, where rcd is short for reduced channel dimension.
+Secondly, we reduce the number of Blocks from 5 to 3, the model is denoted by EPIT rbn,
+short for reduced block number. Lastly, we compare to that the performance of our proposed
+architecture, integrating the shifted window mechanism into the EPIT model. It is denoted by
+EPIT SWin. In order to ablate, wether the shift leads to improvement, we also train a model
+for which only windowed attention is employed, but the cyclic shift is omitted. The model is
+denoted by EPIT Win
 
 ![alt text](https://github.com/luigi1982/HSLFSR/blob/showcase/images/changes.png)
